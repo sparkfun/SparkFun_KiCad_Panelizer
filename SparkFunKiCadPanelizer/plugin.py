@@ -124,7 +124,12 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
 
                 if board is not None:
                     sysExit, report = p_panelizer.startPanelizerCommand(command, board, self.ordering_instructions, self.logger)
-                    self.logger.log(logging.DEBUG if sysExit == 0 else logging.ERROR, report)
+                    logWarn = logging.DEBUG
+                    if sysExit >= 1:
+                        logWarn = logging.WARN
+                    if sysExit >= 2:
+                        logWarn = logging.ERROR
+                    self.logger.log(logWarn, report)
                     if sysExit > 0:
                         wx.MessageBox("Panelizer " + ("warning" if (sysExit == 1) else "error") + ".\nPlease check panelizer.log for details.",
                             ("Warning" if (sysExit == 1) else "Error"), wx.OK | (wx.ICON_WARNING if (sysExit == 1) else wx.ICON_ERROR))

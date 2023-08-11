@@ -1055,6 +1055,7 @@ class Panelizer():
             if wx.GetApp() is not None:
                 resp = wx.MessageBox("Ordering Instructions not found!\nNo futher warnings will be given.",
                             'Warning', wx.OK | wx.ICON_WARNING)
+            report += "Ordering Instructions not found! No futher ordering warnings will be given.\n"
             sysExit = 1
 
         if ordering is None:
@@ -1168,6 +1169,7 @@ class Panelizer():
                         refs += "," + keys
                 resp = wx.MessageBox("Empty (undefined) PROD_IDs found!\n" + refs,
                             'Warning', wx.OK | wx.ICON_WARNING)
+                report += "Empty (undefined) PROD_IDs found!" + refs + "\n"
                 sysExit = 1
 
         if sysExit < 0:
