@@ -1,0 +1,34 @@
+name: Build Asset
+on: 
+  workflow_dispatch:
+    branches: 
+
+jobs:
+  build:
+    
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Update zip
+        run: |
+          cd pcm
+          python build.py
+          cd build
+          echo "ZIP_NAME=$(ls SparkFunKiCadPanelizer*.zip)" >> $GITHUB_ENV
+          echo "PCM_NAME=$(ls SparkFunKiCadPanelizer*.zip | rev | cut -c 5- | rev)" >> $GITHUB_ENV
+
+      - name: Upload pcm build to action - avoid double-zip
+        uses: actions/upload-artifact@v3
+        with: 
+          name: ${{ env.PCM_NAME }}
+          path: ./pcm/build/${{ env.PCM_NAME }}
+          retention-days: 7

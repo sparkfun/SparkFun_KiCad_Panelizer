@@ -1,0 +1,35 @@
+{
+    "$schema": "https://go.kicad.org/pcm/schemas/v1",
+    "name": "SparkFun KiCad Panelizer",
+    "description": "SparkFun's simple PCB panelizer for KiCad 7",
+    "description_full": "Converts a single PCB into a panel of multiple PCBs with v-scores in between",
+    "identifier": "com.github.sparkfun.SparkFunKiCadPanelizer",
+    "type": "plugin",
+    "author": {
+        "name": "SparkFun",
+        "contact": {
+            "github": "https://github.com/sparkfun",
+            "web": "https://sparkfun.com",
+            "twitter": "https://twitter.com/sparkfun"
+        }
+    },    
+    "maintainer": {
+        "name": "SparkFun",
+        "contact": {
+            "github": "https://github.com/sparkfun",
+            "web": "https://sparkfun.com",
+            "twitter": "https://twitter.com/sparkfun"
+        }
+    },
+    "license": "MIT",
+    "resources": {
+        "homepage": "https://github.com/sparkfun/SparkFun_KiCad_Panelizer"
+    },
+    "versions": [
+        {
+            "version": "1.0.0",
+            "status": "stable",
+            "kicad_version": "7.0"
+        }
+    ]
+}

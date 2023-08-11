@@ -1,0 +1,1 @@
+from .SparkFunKiCadPanelizer import plugin
