@@ -65,13 +65,13 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
 
         self.logger = logging.getLogger('panelizer_logger')
         f_handler = logging.FileHandler(logFile)
-        f_handler.setLevel(logging.DEBUG)
+        f_handler.setLevel(logging.DEBUG) # Log everything
         f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         f_handler.setFormatter(f_format)
         self.logger.addHandler(f_handler)
 
         def run_panelizer(dlg, p_panelizer):
-            self.logger.log(logging.DEBUG, "Running Panelizer")
+            self.logger.log(logging.INFO, "Running Panelizer")
 
             if self.IsVersion(['7.']):
                 command = []
@@ -118,13 +118,13 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                         command.extend(['--vrail','6.35'])
                         command.append('--fiducialslr')
 
-                self.logger.log(logging.DEBUG, command)
+                self.logger.log(logging.INFO, command)
 
                 board = pcbnew.GetBoard()
 
                 if board is not None:
                     sysExit, report = p_panelizer.startPanelizerCommand(command, board, self.ordering_instructions, self.logger)
-                    logWarn = logging.DEBUG
+                    logWarn = logging.INFO
                     if sysExit >= 1:
                         logWarn = logging.WARN
                     if sysExit >= 2:
