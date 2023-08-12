@@ -118,6 +118,8 @@ class Panelizer():
         # Minimum spacer for exposed edge panels
         MINIMUM_SPACER = 6.35 # mm
 
+        INVALID_WIDTH = 999999999
+
         # 'Extra' ordering instructions
         # Any PCB_TEXT containing any of these keywords will be copied into the ordering instructions
         possibleExtras = ['clean', 'Clean', 'CLEAN']
@@ -390,8 +392,8 @@ class Panelizer():
         # Array of tracks
         # Note: Duplicate uses the same net name for the duplicated track.
         #       This creates DRC unconnected net errors. (KiKit does this properly...)
-        minTrackWidth = 999999999
-        minViaDrill = 999999999
+        minTrackWidth = INVALID_WIDTH
+        minViaDrill = INVALID_WIDTH
         tracks = board.GetTracks()
         newTracks = []
         for sourceTrack in tracks:  # iterate through each track to be copied
@@ -1070,27 +1072,29 @@ class Panelizer():
             if material is not None:
                 report += material + "\n"
             if solderMask is None:
-                solderMask = "Solder Mask: Red"
+                solderMask = "Solder Mask: Red (Default)"
             report += solderMask + "\n"
             if silkscreen is None:
-                silkscreen = "Silkscreen: White"
+                silkscreen = "Silkscreen: White (Default)"
             report += silkscreen + "\n"
             if numLayers is None:
-                numLayers = "Layers: 2"
+                numLayers = "Layers: 2 (Default)"
             report += numLayers + "\n"
             if finish is None:
-                finish = "Finish: HASL Lead-free"
+                finish = "Finish: HASL Lead-free (Default)"
             report += finish + "\n"
             if thickness is None:
-                thickness = "Thickness: 1.6mm"
+                thickness = "Thickness: 1.6mm (Default)"
             report += thickness + "\n"
             if copperWeight is None:
-                copperWeight = "Copper weight: 1oz"
+                copperWeight = "Copper weight: 1oz (Default)"
             report += copperWeight + "\n"
-            report += "Minimum track width: {:.2f}mm ({:.2f}mil)\n".format(
-                float(minTrackWidth) / SCALE, float(minTrackWidth) * 1000 / (SCALE * 25.4))
-            report += "Minimum via drill: {:.2f}mm ({:.2f}mil)\n".format(
-                float(minViaDrill) / SCALE, float(minViaDrill) * 1000 / (SCALE * 25.4))
+            if minTrackWidth < INVALID_WIDTH:
+                report += "Minimum track width: {:.2f}mm ({:.2f}mil)\n".format(
+                    float(minTrackWidth) / SCALE, float(minTrackWidth) * 1000 / (SCALE * 25.4))
+            if minViaDrill < INVALID_WIDTH:
+                report += "Minimum via drill: {:.2f}mm ({:.2f}mil)\n".format(
+                    float(minViaDrill) / SCALE, float(minViaDrill) * 1000 / (SCALE * 25.4))
             if orderingExtras is not None:
                 report += orderingExtras
         else:
@@ -1110,49 +1114,51 @@ class Panelizer():
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("Solder mask color not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        solderMask = "Solder Mask: Red"
+                        solderMask = "Solder Mask: Red (Default)"
                     oi.write(solderMask + "\n")
                     if silkscreen is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("Silkscreen color not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        silkscreen = "Silkscreen: White"
+                        silkscreen = "Silkscreen: White (Default)"
                     oi.write(silkscreen + "\n")
                     if numLayers is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("Number of layers not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        numLayers = "Layers: 2"
+                        numLayers = "Layers: 2 (Default)"
                     oi.write(numLayers + "\n")
                     if finish is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("PCB finish not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        finish = "Finish: HASL Lead-free"
+                        finish = "Finish: HASL Lead-free (Default)"
                     oi.write(finish + "\n")
                     if thickness is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("PCB thickness not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        thickness = "Thickness: 1.6mm"
+                        thickness = "Thickness: 1.6mm (Default)"
                     oi.write(thickness + "\n")
                     if copperWeight is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("Copper weight not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        copperWeight = "Copper weight: 1oz"
+                        copperWeight = "Copper weight: 1oz (Default)"
                     oi.write(copperWeight + "\n")
-                    oi.write("Minimum track width: {:.2f}mm ({:.2f}mil)\n".format(
-                        float(minTrackWidth) / SCALE, float(minTrackWidth) * 1000 / (SCALE * 25.4)))
-                    oi.write("Minimum via drill: {:.2f}mm ({:.2f}mil)\n".format(
-                        float(minViaDrill) / SCALE, float(minViaDrill) * 1000 / (SCALE * 25.4)))
+                    if minTrackWidth < INVALID_WIDTH:
+                        oi.write("Minimum track width: {:.2f}mm ({:.2f}mil)\n".format(
+                            float(minTrackWidth) / SCALE, float(minTrackWidth) * 1000 / (SCALE * 25.4)))
+                    if minViaDrill < INVALID_WIDTH:
+                        oi.write("Minimum via drill: {:.2f}mm ({:.2f}mil)\n".format(
+                            float(minViaDrill) / SCALE, float(minViaDrill) * 1000 / (SCALE * 25.4)))
                     if orderingExtras is not None:
                         oi.write(orderingExtras)
             except Exception as e:
                 # Don't throw exception if we can't save ordering instructions
                 pass
 
-        if (prodIDs is not None):
+        if len(prodIDs) > 0:
             emptyProdIDs = {}
             for prodID in prodIDs:
                 if (prodID[0] == '') or (prodID[0] == ' '):
@@ -1160,16 +1166,17 @@ class Panelizer():
                         emptyProdIDs[prodID[1]] = 1
                     else:
                         emptyProdIDs[prodID[1]] = emptyProdIDs[prodID[1]] + 1
-            if wx.GetApp() is not None and orderingInstructionsSeen and emptyProdIDs:
+            if len(emptyProdIDs) > 0:
                 refs = ""
-                for keys, value in emptyProdIDs.items():
+                for ref, num in emptyProdIDs.items():
                     if refs == "":
-                        refs += keys
+                        refs += ref
                     else:
-                        refs += "," + keys
-                resp = wx.MessageBox("Empty (undefined) PROD_IDs found!\n" + refs,
-                            'Warning', wx.OK | wx.ICON_WARNING)
-                report += "Empty (undefined) PROD_IDs found!" + refs + "\n"
+                        refs += "," + ref
+                if wx.GetApp() is not None and orderingInstructionsSeen:
+                    resp = wx.MessageBox("Empty (undefined) PROD_IDs found!\n" + refs,
+                                'Warning', wx.OK | wx.ICON_WARNING)
+                report += "Empty (undefined) PROD_IDs found: " + refs + "\n"
                 sysExit = 1
 
         if sysExit < 0:
