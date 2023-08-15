@@ -53,7 +53,7 @@ The code for this plugin is licensed under the MIT license. Please see `LICENSE`
 
 `panelizer.py` is based heavily on [Simon John (@sej7278)](https://github.com/sej7278/kicad-panelizer)'s version of [Willem Hillier (@willemcvu)'s kicad-panelizer](https://github.com/willemcvu/kicad-panelizer).
 
-The [wxFormBuilder](https://github.com/wxFormBuilder/wxFormBuilder/releases) `text_dialog.fbp` and associated code is based on [Greg Davill @gregdavill](https://github.com/gregdavill)'s [KiBuzzard](https://github.com/gregdavill/KiBuzzard).
+The [wxFormBuilder](https://github.com/wxFormBuilder/wxFormBuilder/releases) `text_dialog.fbp` and associated code is based on [Greg Davill (@gregdavill)](https://github.com/gregdavill)'s [KiBuzzard](https://github.com/gregdavill/KiBuzzard).
 
 ## How It Works
 
