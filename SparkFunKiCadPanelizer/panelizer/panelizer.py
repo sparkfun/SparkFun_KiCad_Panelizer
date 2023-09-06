@@ -124,6 +124,14 @@ class Panelizer():
         # Any PCB_TEXT containing any of these keywords will be copied into the ordering instructions
         possibleExtras = ['clean', 'Clean', 'CLEAN']
 
+        # Permutations for Ordering Instructions
+        possibleOrderingInstructions = [
+            "Ordering_Instructions",
+            "ORDERING_INSTRUCTIONS",
+            "Ordering Instructions",
+            "ORDERING INSTRUCTIONS"
+        ]
+
         sysExit = -1 # -1 indicates sysExit has not (yet) been set. The code below will set this to 0, 1, 2.
         report = "\nSTART: " + datetime.now().isoformat() + "\n"
 
@@ -433,8 +441,9 @@ class Panelizer():
         newModules = []
         prodIDs = []
         for sourceModule in modules:
-            if "Ordering_Instructions" in sourceModule.GetFPIDAsString():
-                orderingInstructionsSeen = True
+            for instruction in possibleOrderingInstructions:
+                if instruction in sourceModule.GetFPIDAsString():
+                    orderingInstructionsSeen = True
             if "SparkFun_Logo" in sourceModule.GetFPIDAsString():
                 sparkfunLogoSeen = True
             if "SparkX_Logo" in sourceModule.GetFPIDAsString():
@@ -520,26 +529,28 @@ class Panelizer():
         for sourceDrawing in drawings:
             if isinstance(sourceDrawing, pcbnew.PCB_TEXT):
                 txt = sourceDrawing.GetShownText()
-                if "mask" in txt or "Mask" in txt or "MASK" in txt:
-                    solderMask = txt
-                if "layers" in txt or "Layers" in txt or "LAYERS" in txt:
-                    if numLayers is None: # Should we trust the instructions or the tracks?!
-                        numLayers = txt
-                if "impedance" in txt or "Impedance" in txt or "IMPEDANCE" in txt:
-                    controlledImpedance = txt
-                if "finish" in txt or "Finish" in txt or "FINISH" in txt:
-                    finish = txt
-                if "thickness" in txt or "Thickness" in txt or "THICKNESS" in txt:
-                    thickness = txt
-                if "material" in txt or "Material" in txt or "MATERIAL" in txt:
-                    material = txt            
-                if "weight" in txt or "Weight" in txt or "WEIGHT" in txt or "oz" in txt or "Oz" in txt or "OZ" in txt:
-                    copperWeight = txt
-                for extra in possibleExtras:
-                    if extra in txt:
-                        if orderingExtras is None:
-                            orderingExtras = ""
-                        orderingExtras += txt + "\n"
+                lines = txt.splitlines()
+                for line in lines:
+                    if "mask" in line or "Mask" in line or "MASK" in line:
+                        solderMask = line
+                    if "layers" in line or "Layers" in line or "LAYERS" in line:
+                        if numLayers is None: # Should we trust the instructions or the tracks?!
+                            numLayers = line
+                    if "impedance" in line or "Impedance" in line or "IMPEDANCE" in line:
+                        controlledImpedance = line
+                    if "finish" in line or "Finish" in line or "FINISH" in line:
+                        finish = line
+                    if "thickness" in line or "Thickness" in line or "THICKNESS" in line:
+                        thickness = line
+                    if "material" in line or "Material" in line or "MATERIAL" in line:
+                        material = line            
+                    if "weight" in line or "Weight" in line or "WEIGHT" in line or "oz" in line or "Oz" in line or "OZ" in line:
+                        copperWeight = line
+                    for extra in possibleExtras:
+                        if extra in line:
+                            if orderingExtras is None:
+                                orderingExtras = ""
+                            orderingExtras += line + "\n"
             pos = sourceDrawing.GetPosition() # Check if drawing is outside the bounding box
             if pos.x >= boardLeftEdge and pos.x <= boardRightEdge and \
                 pos.y >= boardTopEdge and pos.y <= boardBottomEdge:
