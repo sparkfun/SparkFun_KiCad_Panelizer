@@ -11,8 +11,9 @@ class MyApp(wx.App):
 
         config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'panel_config.json')
         ordering_instructions = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ordering_instructions.txt')
+        layertable = {'F.Cu': 1, 'User.Comments': 2, 'User.1':3}
 
-        self.frame = frame = Dialog(None, config_file, ordering_instructions, Panelizer(), self.run)
+        self.frame = frame = Dialog(None, config_file, layertable, ordering_instructions, Panelizer(), self.run)
         if frame.ShowModal() == wx.ID_OK:
             print("Graceful Exit")
         frame.Destroy()
