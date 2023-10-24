@@ -53,7 +53,7 @@ class DialogPanel ( wx.Panel ):
         bSizer7 = wx.BoxSizer( wx.VERTICAL )
 
         self.notebook = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.NB_TOP|wx.BORDER_DEFAULT )
-        self.notebook.SetMinSize( wx.Size( 300,600 ) )
+        self.notebook.SetMinSize( wx.Size( 350,450 ) )
 
 
         bSizer7.Add( self.notebook, 1, wx.EXPAND |wx.ALL, 5 )
@@ -214,8 +214,20 @@ class GeneralPanelBase ( wx.Panel ):
 
         sbSizer4.Add( fgSizer3, 1, wx.EXPAND, 5 )
 
+        fgSizer5 = wx.FlexGridSizer( 0, 2, 0, 0 )
+        fgSizer5.SetFlexibleDirection( wx.BOTH )
+        fgSizer5.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
         self.m_productionExposeCheck = wx.CheckBox( sbSizer4.GetStaticBox(), wx.ID_ANY, _(u"Expose Bottom/Card Edge"), wx.DefaultPosition, wx.DefaultSize, 0 )
-        sbSizer4.Add( self.m_productionExposeCheck, 0, wx.ALL, 5 )
+        fgSizer5.Add( self.m_productionExposeCheck, 0, wx.ALL, 5 )
+
+        self.m_buttonEdgeHelp = wx.Button( sbSizer4.GetStaticBox(), wx.ID_ANY, _(u"MyButton"), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_buttonEdgeHelp.SetMinSize( wx.Size( 15,15 ) )
+
+        fgSizer5.Add( self.m_buttonEdgeHelp, 0, wx.ALL, 5 )
+
+
+        sbSizer4.Add( fgSizer5, 1, wx.EXPAND, 5 )
 
 
         bMainSizer.Add( sbSizer4, 0, wx.EXPAND, 5 )
@@ -225,7 +237,19 @@ class GeneralPanelBase ( wx.Panel ):
         self.Layout()
         bMainSizer.Fit( self )
 
+        # Connect Events
+        self.m_buttonFiducialsHelp.Bind( wx.EVT_BUTTON, self.ClickFiducialsHelp )
+        self.m_buttonEdgeHelp.Bind( wx.EVT_BUTTON, self.ClickEdgeHelp )
+
     def __del__( self ):
+        pass
+
+
+    # Virtual event handlers, override them in your derived class
+    def ClickFiducialsHelp( self, event ):
+        pass
+
+    def ClickEdgeHelp( self, event ):
         pass
 
 
@@ -242,9 +266,9 @@ class VScorePanelBase ( wx.Panel ):
 
         sbSizer5 = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, _(u"V-Score Layer:") ), wx.VERTICAL )
 
-        fgSizer4 = wx.FlexGridSizer( 0, 2, 0, 0 )
-        fgSizer4.SetFlexibleDirection( wx.BOTH )
-        fgSizer4.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+        LayersGridSizer = wx.FlexGridSizer( 0, 2, 0, 0 )
+        LayersGridSizer.SetFlexibleDirection( wx.BOTH )
+        LayersGridSizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
         self.LayersGrid = wx.grid.Grid( sbSizer5.GetStaticBox(), wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
@@ -274,10 +298,10 @@ class VScorePanelBase ( wx.Panel ):
 
         # Cell Defaults
         self.LayersGrid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-        fgSizer4.Add( self.LayersGrid, 0, wx.ALL|wx.EXPAND, 5 )
+        LayersGridSizer.Add( self.LayersGrid, 0, wx.ALL|wx.EXPAND, 5 )
 
 
-        sbSizer5.Add( fgSizer4, 1, wx.EXPAND, 5 )
+        sbSizer5.Add( LayersGridSizer, 1, wx.EXPAND, 5 )
 
 
         bSizer11.Add( sbSizer5, 1, wx.EXPAND, 5 )

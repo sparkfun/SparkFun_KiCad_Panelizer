@@ -113,7 +113,11 @@ class Panelizer():
         # Panel fiducial parameters
         FIDUCIAL_MASK = 3.0 # mm - Fiducial_1.5mm_Mask3mm
         FIDUCIAL_OFFSET = 2.5 # mm
-        FIDUCIAL_FOOTPRINT = "Fiducial_1.5mm_Mask3mm"
+        FIDUCIAL_FOOTPRINT_BIG = "Fiducial_1.5mm_Mask3mm"
+        FIDUCIAL_FOOTPRINT_SMALL = "Fiducial_1mm_Mask3mm"
+
+        # Text for empty edges
+        EMPTY_EDGE_TEXT = "SparkFun"
 
         # Minimum spacer for exposed edge panels
         MINIMUM_SPACER = 6.35 # mm
@@ -198,6 +202,17 @@ class Panelizer():
                 os.mkdir(panelOutputPath)
             panelOutputFile = os.path.split(board.GetFileName())[1] # Get the file path tail
             panelOutputFile = os.path.join(panelOutputPath, os.path.splitext(panelOutputFile)[0] + "_panelized.kicad_pcb")
+
+            # Check if PCB needs to be saved
+            #if board.IsModified(): # This doesn't work. Need to find something that does...
+            if wx.GetApp() is not None:
+                resp = wx.MessageBox("Do you want to save the PCB first?",
+                            'Save PCB?', wx.YES_NO | wx.ICON_INFORMATION)
+                if resp == wx.YES:
+                    report += "Board saved by user.\n"
+                    board.Save(board.GetFileName())
+            else:
+                board.Save(board.GetFileName())
 
         if board is None:
             report += "Could not load board. Quitting.\n"
@@ -939,39 +954,45 @@ class Panelizer():
             if FIDUCIALS_LR:
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH)))
+                    int(panelCenter.y + (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y + (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH)))
+                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    FIDUCIAL_FOOTPRINT_SMALL
                 ])
                 fiducials.append([
                     int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH)))
+                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    FIDUCIAL_FOOTPRINT_SMALL
                 ])
             if FIDUCIALS_TB:
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
-                ])
-                fiducials.append([
-                    int(panelCenter.x + (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
+                    int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    FIDUCIAL_FOOTPRINT_SMALL
+                ])
+                fiducials.append([
+                    int(panelCenter.x + (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    FIDUCIAL_FOOTPRINT_SMALL
                 ])
             for pos in fiducials:
                 # Front / Top
-                fiducial = pcbnew.FootprintLoad(fiducialPath, FIDUCIAL_FOOTPRINT)
+                fiducial = pcbnew.FootprintLoad(fiducialPath, pos[2])
                 fiducial.SetReference("") # Clear the reference silk
                 fiducial.SetValue("")
                 board.Add(fiducial)
                 fiducial.SetPosition(pcbnew.VECTOR2I(pos[0], pos[1]))
 
                 # Back / Bottom
-                fiducial = pcbnew.FootprintLoad(fiducialPath, FIDUCIAL_FOOTPRINT)
+                fiducial = pcbnew.FootprintLoad(fiducialPath, pos[2])
                 fiducial.SetReference("") # Clear the reference silk
                 fiducial.SetValue("")
                 board.Add(fiducial)
@@ -1042,6 +1063,66 @@ class Panelizer():
         if TITLE_Y: # Add text to right rail
             titleblock_text = pcbnew.PCB_TEXT(board)
             titleblock_text.SetText(TITLE_TEXT)
+            titleblock_text.SetTextSize(pcbnew.VECTOR2I(int(SCALE * RAIL_TEXT_SIZE), int(SCALE * RAIL_TEXT_SIZE)))
+            titleblock_text.SetLayer(pcbnew.F_SilkS)
+            titleblock_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
+            titleblock_text.SetPosition(
+                pcbnew.VECTOR2I(
+                    int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                )
+            )
+            titleblock_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))
+            board.Add(titleblock_text)
+
+        # If rails are present but don't contain copper or silk, add something so JLCPCB picks up the correct panel size
+        # Bottom Edge
+        if (HORIZONTAL_EDGE_RAIL_WIDTH > 0.0) and (not FIDUCIALS_TB) and (not HORIZONTAL_EDGE_RAIL_TEXT):
+            hrail_text = pcbnew.PCB_TEXT(board)
+            hrail_text.SetText(EMPTY_EDGE_TEXT)
+            hrail_text.SetTextSize(pcbnew.VECTOR2I(int(SCALE * RAIL_TEXT_SIZE), int(SCALE * RAIL_TEXT_SIZE)))
+            hrail_text.SetLayer(pcbnew.F_SilkS)
+            hrail_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
+            hrail_text.SetPosition(
+                pcbnew.VECTOR2I(
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
+                )
+            )
+            board.Add(hrail_text)
+        # Top Edge
+        if (HORIZONTAL_EDGE_RAIL_WIDTH > 0.0) and (not FIDUCIALS_TB) and (not TITLE_X):
+            titleblock_text = pcbnew.PCB_TEXT(board)
+            titleblock_text.SetText(EMPTY_EDGE_TEXT)
+            titleblock_text.SetTextSize(pcbnew.VECTOR2I(int(SCALE * RAIL_TEXT_SIZE), int(SCALE * RAIL_TEXT_SIZE)))
+            titleblock_text.SetLayer(pcbnew.F_SilkS)
+            titleblock_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
+            titleblock_text.SetPosition(
+                pcbnew.VECTOR2I(
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
+                )
+            )
+            board.Add(titleblock_text)
+        # Left Edge
+        if (VERTICAL_EDGE_RAIL_WIDTH > 0.0) and (not FIDUCIALS_LR) and (not VERTICAL_EDGE_RAIL_TEXT):
+            vrail_text = pcbnew.PCB_TEXT(board)
+            vrail_text.SetText(EMPTY_EDGE_TEXT)
+            vrail_text.SetTextSize(pcbnew.VECTOR2I(int(SCALE * RAIL_TEXT_SIZE), int(SCALE * RAIL_TEXT_SIZE)))
+            vrail_text.SetLayer(pcbnew.F_SilkS)
+            vrail_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
+            vrail_text.SetPosition(
+                pcbnew.VECTOR2I(
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                )
+            )
+            vrail_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))  # rotate if on vrail
+            board.Add(vrail_text)
+        # Right Edge
+        if (VERTICAL_EDGE_RAIL_WIDTH > 0.0) and (not FIDUCIALS_LR) and (not TITLE_Y):
+            titleblock_text = pcbnew.PCB_TEXT(board)
+            titleblock_text.SetText(EMPTY_EDGE_TEXT)
             titleblock_text.SetTextSize(pcbnew.VECTOR2I(int(SCALE * RAIL_TEXT_SIZE), int(SCALE * RAIL_TEXT_SIZE)))
             titleblock_text.SetLayer(pcbnew.F_SilkS)
             titleblock_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)

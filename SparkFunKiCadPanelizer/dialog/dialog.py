@@ -31,6 +31,25 @@ def get_version(rel_path: str) -> str:
 
 _APP_VERSION = get_version("_version.py")
 
+# try:
+#     if hasattr(wx, "GetLibraryVersionInfo"):
+#         WX_VERSION = wx.GetLibraryVersionInfo()  # type: wx.VersionInfo
+#         WX_VERSION = (WX_VERSION.Major, WX_VERSION.Minor, WX_VERSION.Micro)
+#     else:
+#         # old kicad used this (exact version doesnt matter)
+#         WX_VERSION = (3, 0, 2)
+# except:
+#     WX_VERSION = (3, 1, 6)
+
+def get_btn_bitmap(bitmap):
+    path = resource_path(bitmap)
+    png = wx.Bitmap(path, wx.BITMAP_TYPE_PNG)
+
+    #if WX_VERSION >= (3, 1, 6):
+    return wx.BitmapBundle(png)
+    #else:
+    #return png
+
 def ParseFloat(InputString, DefaultValue=0.0):
     value = DefaultValue
     if InputString != "":
@@ -42,11 +61,27 @@ def ParseFloat(InputString, DefaultValue=0.0):
 
 class Dialog(dialog_text_base.DialogPanelBase):
     def __init__(self, parent, config, layertable, ordering, panelizer, func):
+
         dialog_text_base.DialogPanelBase.__init__(self, None)
 
+        self.panel = DialogPanel(self, config, layertable, ordering, panelizer, func)
+
+        best_size = self.BestSize
+        # hack for some gtk themes that incorrectly calculate best size
+        best_size.IncBy(dx=0, dy=30)
+        self.SetClientSize(best_size)
+
         self.SetTitle(_APP_NAME + " - " + _APP_VERSION)
-        self.panel = DialogPanel(self,config,layertable,ordering,panelizer,func)
-        
+
+    # hack for new wxFormBuilder generating code incompatible with old wxPython
+    # noinspection PyMethodOverriding
+    def SetSizeHints(self, sz1, sz2):
+        try:
+            # wxPython 4
+            super(Dialog, self).SetSizeHints(sz1, sz2)
+        except TypeError:
+            # wxPython 3
+            self.SetSizeHintsSz(sz1, sz2)
 
 class DialogPanel(dialog_text_base.DialogPanel):
     # The names of the config items need to match the names in dialog_text_base minus the m_
@@ -70,13 +105,9 @@ class DialogPanel(dialog_text_base.DialogPanel):
     }
 
     def __init__(self, parent, config, layertable, ordering, panelizer, func):
+
         dialog_text_base.DialogPanel.__init__(self, parent)
         
-        # hack for some gtk themes that incorrectly calculate best size
-        #best_size = self.BestSize
-        #best_size.IncBy(dx=0, dy=30)
-        #self.SetClientSize(best_size)
-
         self.config_file = config
 
         self.layertable = layertable
@@ -151,7 +182,7 @@ class DialogPanel(dialog_text_base.DialogPanel):
                     self.vscore.LayersGrid.SetCellValue(0, 0, "1") # Default to the first layer
             else:
                 try:
-                    obj = getattr(self, "m_{}".format(key))
+                    obj = getattr(self.general, "m_{}".format(key))
                     if hasattr(obj, "SetValue"):
                         obj.SetValue(value)
                     elif hasattr(obj, "SetStringSelection"):
@@ -170,9 +201,9 @@ class DialogPanel(dialog_text_base.DialogPanel):
             if self.vscore_layer in item:
                 for row in range(self.vscore.LayersGrid.GetNumberRows()):
                     if self.vscore.LayersGrid.GetCellValue(row, 0) == "1":
-                        params.update({'vScoreLayer': self.LayersGrid.GetCellValue(row, 1)})
+                        params.update({self.vscore_layer: self.vscore.LayersGrid.GetCellValue(row, 1)})
             else:
-                obj = getattr(self, "m_{}".format(item))
+                obj = getattr(self.general, "m_{}".format(item))
                 if hasattr(obj, "GetValue"):
                     params.update({item: obj.GetValue()})
                 elif hasattr(obj, "GetStringSelection"):
@@ -190,12 +221,52 @@ class DialogPanel(dialog_text_base.DialogPanel):
         self.GetParent().EndModal(wx.ID_CANCEL)     
 
 class GeneralPanel(dialog_text_base.GeneralPanelBase):
+
     def __init__(self, parent):
         dialog_text_base.GeneralPanelBase.__init__(self, parent)
 
+        self.m_buttonFiducialsHelp.SetLabelText("")
+        # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
+        self.m_buttonFiducialsHelp.SetBitmap(get_btn_bitmap("info-15.png"))
+
+        self.m_buttonEdgeHelp.SetLabelText("")
+        # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
+        self.m_buttonEdgeHelp.SetBitmap(get_btn_bitmap("info-15.png"))
+
+    def ClickFiducialsHelp( self, event ):
+        wx.MessageBox("\
+By default, the panel fiducials are placed in\n\
+the top and bottom edges. Normally we\n\
+recommend leaving them there.\n\
+\n\
+Selecting this option moves them to the left\n\
+and right edges.\n\
+\n\
+This can be useful when using horizontal gaps\n\
+and vertical v-scores. It avoids the panel\n\
+having to be scrapped if an edge has been\n\
+snapped off and the fiducials are missing.\
+", 'Info', wx.OK | wx.ICON_INFORMATION)
+
+    def ClickEdgeHelp( self, event ):
+        wx.MessageBox("\
+Select this option if you are panelizing\n\
+a MicroMod Processor or Function Board.\n\
+\n\
+The bottom and top edges will be exposed\n\
+so the fingers and chamfered edge can be\n\
+manufactured. The top row of PCBs is\n\
+rotated automatically.\
+", 'Info', wx.OK | wx.ICON_INFORMATION)
+
 class VScorePanel(dialog_text_base.VScorePanelBase):
+
     def __init__(self, parent):
         dialog_text_base.VScorePanelBase.__init__(self, parent)
+
+        self.Layout()
+        self.LayersGrid.SetColSize(0, 50)
+        self.LayersGrid.SetColSize(1, self.GetParent().GetClientSize().x - 80)
 
     def OnLayersGridCellClicked(self, event):
         self.LayersGrid.ClearSelection()
@@ -203,5 +274,5 @@ class VScorePanel(dialog_text_base.VScorePanelBase):
         if event.Col == 0:
             for row in range(self.LayersGrid.GetNumberRows()):
                 val = "1" if (row == event.Row) else "0" # JSON style
-                self.LayersGrid.SetCellValue(event.Row, event.Col, val)
+                self.LayersGrid.SetCellValue(row, 0, val)
 
