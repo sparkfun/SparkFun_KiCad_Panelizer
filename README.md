@@ -34,6 +34,7 @@ We have deliberately kept the GUI options as simple as possible. (More options a
 * Set your preferred panel size in X and Y. You can instruct the panelizer to make the panel smaller or larger than the defined size. We usually want the panel to be smaller than 5.5" x 7.5" for our Pick and Place machine. But larger-than is handy if you are creating a panel containing a single PCB. Set the panel size to (e.g.) 1" x 1", and select larger-than.
 * You can add vertical or horizontal gaps between columns or rows of boards. This is handy if you have overhanging components - like USB-C connectors.
 * If you are designing a M.2 card - like our MicroMod Processor Boards and Function Boards - select the exposed edge option. The panelizer will create a panel with one or two rows of PCBs depending on the panel size. For two-row, the top row is automatically rotated by 180 degrees to expose the PCB 'bottom' edge.
+* From v1.1.0, you can use the V-Score page to set the layer for the v-score lines and text. Previously this was hard-coded to 'User.Comments'. From v1.1.0, you can select an alternate layer (e.g. 'User.1') if 'User.Comments' already has text on it. Select the same layer when running the [CAMmer](https://github.com/sparkfun/SparkFun_KiCad_CAMmer).
 
 Click **Panelize** to panelize the board.
 
