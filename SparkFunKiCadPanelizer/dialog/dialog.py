@@ -31,24 +31,10 @@ def get_version(rel_path: str) -> str:
 
 _APP_VERSION = get_version("_version.py")
 
-# try:
-#     if hasattr(wx, "GetLibraryVersionInfo"):
-#         WX_VERSION = wx.GetLibraryVersionInfo()  # type: wx.VersionInfo
-#         WX_VERSION = (WX_VERSION.Major, WX_VERSION.Minor, WX_VERSION.Micro)
-#     else:
-#         # old kicad used this (exact version doesnt matter)
-#         WX_VERSION = (3, 0, 2)
-# except:
-#     WX_VERSION = (3, 1, 6)
-
 def get_btn_bitmap(bitmap):
     path = resource_path(bitmap)
     png = wx.Bitmap(path, wx.BITMAP_TYPE_PNG)
-
-    #if WX_VERSION >= (3, 1, 6):
     return wx.BitmapBundle(png)
-    #else:
-    #return png
 
 def ParseFloat(InputString, DefaultValue=0.0):
     value = DefaultValue
