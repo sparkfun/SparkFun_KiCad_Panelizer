@@ -70,6 +70,28 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         f_handler.setFormatter(f_format)
         self.logger.addHandler(f_handler)
 
+        # Build layer table
+        layertable = {}
+        numlayers = pcbnew.PCB_LAYER_ID_COUNT
+        for i in range(numlayers):
+            layertable[board.GetLayerName(i)] = i
+
+        # Check the number of copper layers. Delete unwanted layers from the table.
+        wantedCopper = []
+        if board.GetCopperLayerCount() >= 2:
+            wantedCopper.extend(['F.Cu','B.Cu'])
+        if board.GetCopperLayerCount() >= 4:
+            wantedCopper.extend(['In1.Cu','In2.Cu'])
+        if board.GetCopperLayerCount() >= 6:
+            wantedCopper.extend(['In3.Cu','In4.Cu'])
+        deleteLayers = []
+        for layer in layertable.keys():
+            if layer[-3:] == ".Cu":
+                if layer not in wantedCopper:
+                    deleteLayers.append(layer)
+        for layer in deleteLayers:
+            layertable.pop(layer, None)
+
         def run_panelizer(dlg, p_panelizer):
             self.logger.log(logging.INFO, "Running Panelizer")
 
@@ -90,6 +112,9 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                     command.append('--smaller')
                 else:
                     command.append('--larger')
+
+                vscorelayer = dlg.CurrentSettings()[dlg.vscore_layer]
+                command.extend(['--vscorelayer', vscorelayer, '--vscoretextlayer', vscorelayer])
 
                 gapx = float(dlg.CurrentSettings()["gapsVerticalCtrl"]) * convertDimensions
                 gapy = float(dlg.CurrentSettings()["gapsHorizontalCtrl"]) * convertDimensions
@@ -139,9 +164,9 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
             else:
                 self.logger.log(logging.ERROR, "Version check failed. \"{}\" not supported".format(self.kicad_build_version))
 
-            dlg.EndModal(wx.ID_OK)
+            dlg.GetParent().EndModal(wx.ID_OK)
 
-        dlg = Dialog(self._pcbnew_frame, self.config_file, self.ordering_instructions, Panelizer(), run_panelizer)
+        dlg = Dialog(self._pcbnew_frame, self.config_file, layertable, self.ordering_instructions, Panelizer(), run_panelizer)
     
         try:
             result = dlg.ShowModal()
