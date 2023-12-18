@@ -306,8 +306,32 @@ class Panelizer():
         # Set up layer table
         layertable = {}
         numlayers = pcbnew.PCB_LAYER_ID_COUNT
+        edgeLayerNumber = None
+        vScoreLayerNumber = None
+        vScoreTextLayerNumber = None
         for i in range(numlayers):
-            layertable[board.GetLayerName(i)] = i
+            layertable[i] = {'standardName': board.GetStandardLayerName(i), 'actualName': board.GetLayerName(i)}
+            if "Edge.Cuts" in board.GetStandardLayerName(i):
+                edgeLayerNumber = i
+            if V_SCORE_LAYER in board.GetStandardLayerName(i):
+                vScoreLayerNumber = i
+            if V_SCORE_TEXT_LAYER in board.GetStandardLayerName(i):
+                vScoreTextLayerNumber = i
+
+        if edgeLayerNumber is None:
+            report += "Edge.Cuts not found in layertable. Quitting.\n"
+            sysExit = 2
+            return sysExit, report    
+
+        if vScoreLayerNumber is None:
+            report += V_SCORE_LAYER + " not found in layertable. Quitting.\n"
+            sysExit = 2
+            return sysExit, report    
+
+        if vScoreTextLayerNumber is None:
+            report += V_SCORE_TEXT_LAYER + " not found in layertable. Quitting.\n"
+            sysExit = 2
+            return sysExit, report    
 
         # Get dimensions of board
         # Note: the bounding box width and height _include_ the Edge.Cuts line width.
@@ -324,7 +348,7 @@ class Panelizer():
         cutWidth = 0
         drawings = board.GetDrawings()
         for drawing in drawings:
-            if drawing.IsOnLayer(layertable["Edge.Cuts"]):
+            if drawing.IsOnLayer(edgeLayerNumber):
                 if drawing.GetWidth() > cutWidth:
                     cutWidth = drawing.GetWidth()
         #report += "Subtracting Edge.Cuts line width of {}mm.\n".format(cutWidth / SCALE)
@@ -404,7 +428,7 @@ class Panelizer():
         sparkxLogoSeen = False
         solderMask = None
         silkscreen = None
-        numLayers = None
+        numLayers = "Layers: {}".format(board.GetCopperLayerCount())
         controlledImpedance = None
         finish = None
         thickness = None
@@ -427,11 +451,6 @@ class Panelizer():
                 drill = sourceTrack.GetDrill()
                 if drill < minViaDrill:
                     minViaDrill = drill
-            layer = sourceTrack.GetLayerName()
-            if numLayers is None and ("In1.Cu" in layer or "In2.Cu" in layer):
-                numLayers = "Layers: 4"
-            if "In3.Cu" in layer or "In4.Cu" in layer:
-                numLayers = "Layers: 6"
             for x in range(0, NUM_X):  # iterate through x direction
                 for y in range(0, NUM_Y):  # iterate through y direction
                     if (x != 0) or (y != 0):  # do not duplicate source object to location
@@ -619,7 +638,7 @@ class Panelizer():
         # Erase all existing edgeCuts objects (individual board outlines)
         #drawings = board.GetDrawings()
         #for drawing in drawings:
-        #    if drawing.IsOnLayer(layertable["Edge.Cuts"]):
+        #    if drawing.IsOnLayer(edgeLayerNumber):
         #        drawing.DeleteStructure()
 
         # Rail Edge.Cuts
@@ -742,7 +761,7 @@ class Panelizer():
             board.Add(edge)
             edge.SetStart(pcbnew.VECTOR2I(int(cut[0]), int(cut[1])))
             edge.SetEnd(pcbnew.VECTOR2I(int(cut[2]), int(cut[3])))
-            edge.SetLayer(layertable["Edge.Cuts"])
+            edge.SetLayer(edgeLayerNumber)
 
         # Re-calculate board dimensions with new edge cuts
         panelWidth = board.GetBoardEdgesBoundingBox().GetWidth()
@@ -806,7 +825,7 @@ class Panelizer():
             v_score_line = pcbnew.PCB_SHAPE(board)
             v_score_line.SetStart(pcbnew.VECTOR2I(int(x_loc), int(vscore_top)))
             v_score_line.SetEnd(pcbnew.VECTOR2I(int(x_loc), int(vscore_bottom)))
-            v_score_line.SetLayer(layertable[V_SCORE_LAYER])
+            v_score_line.SetLayer(vScoreLayerNumber)
             v_score_line.SetWidth(int(V_SCORE_WIDTH * SCALE))
             board.Add(v_score_line)
             v_score_text = pcbnew.PCB_TEXT(board)
@@ -818,7 +837,7 @@ class Panelizer():
             v_score_text.SetTextSize(
                 pcbnew.VECTOR2I(SCALE * V_SCORE_TEXT_SIZE, SCALE * V_SCORE_TEXT_SIZE)
             )
-            v_score_text.SetLayer(layertable[V_SCORE_TEXT_LAYER])
+            v_score_text.SetLayer(vScoreTextLayerNumber)
             v_score_text.SetTextAngle(pcbnew.EDA_ANGLE(900, pcbnew.TENTHS_OF_A_DEGREE_T))
             board.Add(v_score_text)
 
@@ -856,7 +875,7 @@ class Panelizer():
             v_score_line = pcbnew.PCB_SHAPE(board)
             v_score_line.SetStart(pcbnew.VECTOR2I(int(vscore_left), int(y_loc)))
             v_score_line.SetEnd(pcbnew.VECTOR2I(int(vscore_right), int(y_loc)))
-            v_score_line.SetLayer(layertable[V_SCORE_LAYER])
+            v_score_line.SetLayer(vScoreLayerNumber)
             v_score_line.SetWidth(int(V_SCORE_WIDTH * SCALE))
             board.Add(v_score_line)
             v_score_text = pcbnew.PCB_TEXT(board)
@@ -868,7 +887,7 @@ class Panelizer():
             v_score_text.SetTextSize(
                 pcbnew.VECTOR2I(SCALE * V_SCORE_TEXT_SIZE, SCALE * V_SCORE_TEXT_SIZE)
             )
-            v_score_text.SetLayer(layertable[V_SCORE_TEXT_LAYER])
+            v_score_text.SetLayer(vScoreTextLayerNumber)
             v_score_text.SetTextAngle(pcbnew.EDA_ANGLE(0, pcbnew.TENTHS_OF_A_DEGREE_T))
             board.Add(v_score_text)
 
@@ -919,7 +938,7 @@ class Panelizer():
             route_text = pcbnew.PCB_TEXT(board)
             route_text.SetText("ROUTE OUT")
             route_text.SetTextSize(pcbnew.VECTOR2I(SCALE * V_SCORE_TEXT_SIZE, SCALE * V_SCORE_TEXT_SIZE))
-            route_text.SetLayer(layertable[V_SCORE_TEXT_LAYER])
+            route_text.SetLayer(vScoreLayerNumber)
             route_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_CENTER)
             route_text.SetPosition(pcbnew.VECTOR2I(pos[0], pos[1]))
             route_text.SetTextAngle(pcbnew.EDA_ANGLE(pos[2], pcbnew.TENTHS_OF_A_DEGREE_T))
@@ -930,7 +949,7 @@ class Panelizer():
             route_text = pcbnew.PCB_TEXT(board)
             route_text.SetText("DO NOT REMOVE")
             route_text.SetTextSize(pcbnew.VECTOR2I(SCALE * V_SCORE_TEXT_SIZE, SCALE * V_SCORE_TEXT_SIZE))
-            route_text.SetLayer(layertable[V_SCORE_TEXT_LAYER])
+            route_text.SetLayer(vScoreTextLayerNumber)
             route_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_CENTER)
             route_text.SetPosition(pcbnew.VECTOR2I(arrayCenter.x, arrayCenter.y))
             board.Add(route_text)

@@ -118,10 +118,13 @@ class DialogPanel(dialog_text_base.DialogPanel):
         self.vscore.LayersGrid.AppendRows(len(self.layertable))
         # Initialize them
         row = 0
-        for layer in self.layertable.keys():
+        for layer, names in self.layertable.items():
             self.vscore.LayersGrid.SetCellValue(row, 0, "0") # JSON style
             self.vscore.LayersGrid.SetCellRenderer(row, 0, wx.grid.GridCellBoolRenderer())
-            self.vscore.LayersGrid.SetCellValue(row, 1, layer)
+            layerName = names['standardName']
+            if names['actualName'] != names['standardName']:
+                layerName += " (" + names['actualName'] + ")"
+            self.vscore.LayersGrid.SetCellValue(row, 1, layerName)
             self.vscore.LayersGrid.SetReadOnly(row, 1)
             row += 1
 
@@ -187,7 +190,10 @@ class DialogPanel(dialog_text_base.DialogPanel):
             if self.vscore_layer in item:
                 for row in range(self.vscore.LayersGrid.GetNumberRows()):
                     if self.vscore.LayersGrid.GetCellValue(row, 0) == "1":
-                        params.update({self.vscore_layer: self.vscore.LayersGrid.GetCellValue(row, 1)})
+                        layername = self.vscore.LayersGrid.GetCellValue(row, 1)
+                        if " (" in layername:
+                            layername = layername[:layername.find(" (")] # Trim the actual name - if present
+                        params.update({self.vscore_layer: layername})
             else:
                 obj = getattr(self.general, "m_{}".format(item))
                 if hasattr(obj, "GetValue"):

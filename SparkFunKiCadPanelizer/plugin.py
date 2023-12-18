@@ -74,20 +74,19 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         layertable = {}
         numlayers = pcbnew.PCB_LAYER_ID_COUNT
         for i in range(numlayers):
-            layertable[board.GetLayerName(i)] = i
+            layertable[i] = {'standardName': board.GetStandardLayerName(i), 'actualName': board.GetLayerName(i)}
 
         # Check the number of copper layers. Delete unwanted layers from the table.
         wantedCopper = []
-        if board.GetCopperLayerCount() >= 2:
-            wantedCopper.extend(['F.Cu','B.Cu'])
-        if board.GetCopperLayerCount() >= 4:
-            wantedCopper.extend(['In1.Cu','In2.Cu'])
-        if board.GetCopperLayerCount() >= 6:
-            wantedCopper.extend(['In3.Cu','In4.Cu'])
+        wantedCopper.append("F.Cu")
+        wantedCopper.append("B.Cu")
+        if (board.GetCopperLayerCount() > 2):
+            for i in range(1, board.GetCopperLayerCount() - 1):
+                wantedCopper.append("In{}.Cu".format(i))
         deleteLayers = []
-        for layer in layertable.keys():
-            if layer[-3:] == ".Cu":
-                if layer not in wantedCopper:
+        for layer, names in layertable.items():
+            if names['standardName'][-3:] == ".Cu":
+                if names['standardName'] not in wantedCopper:
                     deleteLayers.append(layer)
         for layer in deleteLayers:
             layertable.pop(layer, None)
