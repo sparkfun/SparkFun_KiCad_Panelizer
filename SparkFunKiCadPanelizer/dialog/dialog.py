@@ -52,7 +52,7 @@ class Dialog(dialog_text_base.DialogPanelBase):
 
         self.panel = DialogPanel(self, config, layertable, ordering, panelizer, func)
 
-        best_size = self.BestSize
+        best_size = self.panel.BestSize
         # hack for some gtk themes that incorrectly calculate best size
         best_size.IncBy(dx=0, dy=30)
         self.SetClientSize(best_size)

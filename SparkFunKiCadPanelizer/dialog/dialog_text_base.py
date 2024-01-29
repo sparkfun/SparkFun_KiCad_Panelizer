@@ -22,7 +22,7 @@ _ = gettext.gettext
 class DialogPanelBase ( DialogShim ):
 
     def __init__( self, parent ):
-        DialogShim.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"SparkFun KiCad Panelizer"), pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE|wx.STAY_ON_TOP|wx.BORDER_DEFAULT )
+        DialogShim.__init__ ( self, parent, id = wx.ID_ANY, title = _(u"SparkFun KiCad Panelizer"), pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER|wx.STAY_ON_TOP|wx.BORDER_DEFAULT )
 
         self.SetSizeHints( wx.Size( -1,-1 ), wx.DefaultSize )
 
