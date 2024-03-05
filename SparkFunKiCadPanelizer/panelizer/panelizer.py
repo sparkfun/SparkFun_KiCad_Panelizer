@@ -579,7 +579,10 @@ class Panelizer():
                     if "material" in line or "Material" in line or "MATERIAL" in line:
                         material = line            
                     if "weight" in line or "Weight" in line or "WEIGHT" in line or "oz" in line or "Oz" in line or "OZ" in line:
-                        copperWeight = line
+                        if copperWeight is None:
+                            copperWeight = line
+                        else:
+                            copperWeight += "\n" + line
                     for extra in possibleExtras:
                         if extra in line:
                             if orderingExtras is None:
