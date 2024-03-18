@@ -11,8 +11,6 @@
         https://github.com/sej7278/kicad-panelizer
 """
 
-__panelizer_version__ = "2.0" # SFE's first version
-
 import os
 import sys
 from argparse import ArgumentParser
@@ -20,6 +18,28 @@ import pcbnew
 import logging
 from datetime import datetime
 import wx
+
+# sub folder for our resource files
+_RESOURCE_DIRECTORY = os.path.join("..", "resource")
+
+#https://stackoverflow.com/a/50914550
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, _RESOURCE_DIRECTORY, relative_path)
+
+def get_version(rel_path: str) -> str:
+    try: 
+        with open(resource_path(rel_path), encoding='utf-8') as fp:
+            for line in fp.read().splitlines():
+                if line.startswith("__version__"):
+                    delim = '"' if '"' in line else "'"
+                    return line.split(delim)[1]
+            raise RuntimeError("Unable to find version string.")
+    except:
+        raise RuntimeError("Unable to find _version.py.")
+
+_APP_VERSION = get_version("_version.py")
 
 class Panelizer():
     def __init__(self):
@@ -31,7 +51,7 @@ class Panelizer():
         # set up command-line arguments parser
         parser = ArgumentParser(description="A script to panelize KiCad 7 files.")
         parser.add_argument(
-            "-v", "--version", action="version", version="%(prog)s " + __panelizer_version__
+            "-v", "--version", action="version", version="%(prog)s " + _APP_VERSION
         )
         parser.add_argument(
             "-p", "--path", help="Path to the *.kicad_pcb file to be panelized"
@@ -117,7 +137,7 @@ class Panelizer():
         FIDUCIAL_FOOTPRINT_SMALL = "Fiducial_1mm_Mask3mm"
 
         # Text for empty edges
-        EMPTY_EDGE_TEXT = "SparkFun"
+        EMPTY_EDGE_TEXT = "Panelized"
 
         # Minimum spacer for exposed edge panels
         MINIMUM_SPACER = 6.35 # mm
@@ -562,7 +582,7 @@ class Panelizer():
         newDrawings = []
         for sourceDrawing in drawings:
             if isinstance(sourceDrawing, pcbnew.PCB_TEXT):
-                txt = sourceDrawing.GetShownText()
+                txt = sourceDrawing.GetShownText(aAllowExtraText=True) # 8.0 Fix: PCB_TEXT.GetShownText() missing 1 required positional argument: 'aAllowExtraText'
                 lines = txt.splitlines()
                 for line in lines:
                     if "mask" in line or "Mask" in line or "MASK" in line:
@@ -610,7 +630,8 @@ class Panelizer():
                 #if txt is not None: # Copy all text outside the bounding box to the report
                 #    report += txt + "\n"
                 if pos.y > boardBottomEdge: # If the drawing is below the bottom edge, move it below the rail
-                    sourceDrawing.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
+                    if pos.y < (boardBottomEdge + (HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)): # But only if in the way
+                        sourceDrawing.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
                 elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
                     sourceDrawing.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
                 elif pos.y < boardTopEdge: # If the drawing is above the top edge, move it above the panel
