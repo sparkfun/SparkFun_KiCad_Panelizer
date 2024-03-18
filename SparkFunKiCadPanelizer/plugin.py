@@ -27,16 +27,18 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         
         self._pcbnew_frame = None
 
+        self.supportedVersions = ['7.','8.']
+
         self.kicad_build_version = pcbnew.GetBuildVersion()
 
     productionDir = "Production"
 
-    def IsVersion(self, VersionStr):
-        for v in VersionStr:
-            if v in self.kicad_build_version:
+    def IsSupported(self):
+        for v in self.supportedVersions:
+            if self.kicad_build_version.startswith(v):
                 return True
         return False
-
+    
     def Run(self):
         if self._pcbnew_frame is None:
             try:
@@ -94,7 +96,7 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         def run_panelizer(dlg, p_panelizer):
             self.logger.log(logging.INFO, "Running Panelizer")
 
-            if self.IsVersion(['7.']):
+            if self.IsSupported():
                 command = []
 
                 convertDimensions = 1.0
@@ -157,6 +159,9 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                     if sysExit > 0:
                         wx.MessageBox("Panelizer " + ("warning" if (sysExit == 1) else "error") + ".\nPlease check panelizer.log for details.",
                             ("Warning" if (sysExit == 1) else "Error"), wx.OK | (wx.ICON_WARNING if (sysExit == 1) else wx.ICON_ERROR))
+                    else:
+                        wx.MessageBox("Panelizer complete.\nPlease check panelizer.log for details.",
+                            "Info", wx.OK | wx.ICON_INFORMATION)
                 else:
                     self.logger.log(logging.ERROR, "Could not get the board")
 
