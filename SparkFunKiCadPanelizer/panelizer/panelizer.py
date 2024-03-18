@@ -126,7 +126,7 @@ class Panelizer():
 
         # 'Extra' ordering instructions
         # Any PCB_TEXT containing any of these keywords will be copied into the ordering instructions
-        possibleExtras = ['clean', 'Clean', 'CLEAN']
+        possibleExtras = ['clean', 'Clean', 'CLEAN', 'stackup', 'Stackup', 'STACKUP']
 
         # Permutations for Ordering Instructions
         possibleOrderingInstructions = [
@@ -428,7 +428,7 @@ class Panelizer():
         sparkxLogoSeen = False
         solderMask = None
         silkscreen = None
-        numLayers = "Layers: {}".format(board.GetCopperLayerCount())
+        copperLayers = "Layers: {}".format(board.GetCopperLayerCount()) # Should we trust the instructions or the tracks?!
         controlledImpedance = None
         finish = None
         thickness = None
@@ -568,8 +568,8 @@ class Panelizer():
                     if "mask" in line or "Mask" in line or "MASK" in line:
                         solderMask = line
                     if "layers" in line or "Layers" in line or "LAYERS" in line:
-                        if numLayers is None: # Should we trust the instructions or the tracks?!
-                            numLayers = line
+                        if copperLayers is None: # Should we trust the instructions or the tracks?!
+                            copperLayers = line
                     if "impedance" in line or "Impedance" in line or "IMPEDANCE" in line:
                         controlledImpedance = line
                     if "finish" in line or "Finish" in line or "FINISH" in line:
@@ -579,7 +579,10 @@ class Panelizer():
                     if "material" in line or "Material" in line or "MATERIAL" in line:
                         material = line            
                     if "weight" in line or "Weight" in line or "WEIGHT" in line or "oz" in line or "Oz" in line or "OZ" in line:
-                        copperWeight = line
+                        if copperWeight is None:
+                            copperWeight = line
+                        else:
+                            copperWeight += "\n" + line
                     for extra in possibleExtras:
                         if extra in line:
                             if orderingExtras is None:
@@ -1188,9 +1191,9 @@ class Panelizer():
             if silkscreen is None:
                 silkscreen = "Silkscreen: White (Default)"
             report += silkscreen + "\n"
-            if numLayers is None:
-                numLayers = "Layers: 2 (Default)"
-            report += numLayers + "\n"
+            if copperLayers is None:
+                copperLayers = "Layers: 2 (Default)"
+            report += copperLayers + "\n"
             if finish is None:
                 finish = "Finish: HASL Lead-free (Default)"
             report += finish + "\n"
@@ -1233,12 +1236,12 @@ class Panelizer():
                                         'Warning', wx.OK | wx.ICON_WARNING)
                         silkscreen = "Silkscreen: White (Default)"
                     oi.write(silkscreen + "\n")
-                    if numLayers is None:
+                    if copperLayers is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("Number of layers not found!",
                                         'Warning', wx.OK | wx.ICON_WARNING)
-                        numLayers = "Layers: 2 (Default)"
-                    oi.write(numLayers + "\n")
+                        copperLayers = "Layers: 2 (Default)"
+                    oi.write(copperLayers + "\n")
                     if finish is None:
                         if wx.GetApp() is not None and orderingInstructionsSeen:
                             resp = wx.MessageBox("PCB finish not found!",
