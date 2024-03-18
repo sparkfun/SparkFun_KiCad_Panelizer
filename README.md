@@ -1,4 +1,4 @@
-# SparkFun PCB Panelizer plugin for KiCad 7
+# SparkFun PCB Panelizer plugin for KiCad 7 / 8
 
 This plugin converts a single PCB into a panel of multiple PCBs, separated by v-score grooves.
 
