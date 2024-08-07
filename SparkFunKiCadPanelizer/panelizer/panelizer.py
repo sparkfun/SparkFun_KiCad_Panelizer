@@ -148,14 +148,6 @@ class Panelizer():
         # Any PCB_TEXT containing any of these keywords will be copied into the ordering instructions
         possibleExtras = ['clean', 'Clean', 'CLEAN', 'stackup', 'Stackup', 'STACKUP']
 
-        # Permutations for Ordering Instructions
-        possibleOrderingInstructions = [
-            "Ordering_Instructions",
-            "ORDERING_INSTRUCTIONS",
-            "Ordering Instructions",
-            "ORDERING INSTRUCTIONS"
-        ]
-
         sysExit = -1 # -1 indicates sysExit has not (yet) been set. The code below will set this to 0, 1, 2.
         report = "\nSTART: " + datetime.now().isoformat() + "\n"
 
@@ -444,7 +436,6 @@ class Panelizer():
         if PANEL_X or PANEL_Y:
             report += "You can fit " + str(NUM_X) + " x " + str(NUM_Y) + " boards on the panel.\n"
         
-        orderingInstructionsSeen = False
         sparkfunLogoSeen = False
         sparkxLogoSeen = False
         solderMask = None
@@ -496,9 +487,6 @@ class Panelizer():
         newModules = []
         prodIDs = []
         for sourceModule in modules:
-            for instruction in possibleOrderingInstructions:
-                if instruction in sourceModule.GetFPIDAsString():
-                    orderingInstructionsSeen = True
             if "SparkFun_Logo" in sourceModule.GetFPIDAsString():
                 sparkfunLogoSeen = True
             if "SparkX_Logo" in sourceModule.GetFPIDAsString():
@@ -534,12 +522,13 @@ class Panelizer():
                                         ref = sourceModule.Reference().GetText()
                                     prodIDs.append([sourceModule.GetPropertyNative("PROD_ID"), ref])
             else: # Move source modules which are outside the bounding box
-                if pos.y > boardBottomEdge: # If the drawing is below the bottom edge, move it below the rail
+                # If the drawing is below the bottom edge and likely to clip the rail, move it below the rail
+                if (pos.y > boardBottomEdge) and (pos.y < (boardBottomEdge + (2 * int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))):
                     sourceModule.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
-                elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
-                    sourceModule.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
                 elif pos.y < boardTopEdge: # If the drawing is above the top edge, move it above the panel
                     sourceModule.Move(pcbnew.VECTOR2I(0, int((-(NUM_Y - 1) * boardHeight) - (HORIZONTAL_EDGE_RAIL_WIDTH * SCALE))))
+                elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
+                    sourceModule.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
                 else: # elif pos.x < boardLeftEdge: # If the drawing is to the left, move it outside the rail
                     sourceModule.Move(pcbnew.VECTOR2I(int(-VERTICAL_EDGE_RAIL_WIDTH * SCALE), 0))
 
@@ -1191,13 +1180,6 @@ class Panelizer():
             sysExit = 1
 
         # Add ordering instructions:
-        if not orderingInstructionsSeen:
-            if wx.GetApp() is not None:
-                resp = wx.MessageBox("Ordering Instructions not found!\nNo futher warnings will be given.",
-                            'Warning', wx.OK | wx.ICON_WARNING)
-            report += "Ordering Instructions not found! No futher ordering warnings will be given.\n"
-            sysExit = 1
-
         if ordering is None:
             report += "\nOrdering Instructions:\n"
             report += (
@@ -1237,6 +1219,7 @@ class Panelizer():
                 report += orderingExtras
         else:
             try:
+                defaultsUsed = False
                 with open(ordering, 'w') as oi:
                     oi.write("Ordering Instructions:\n")
                     oi.write(
@@ -1249,39 +1232,27 @@ class Panelizer():
                     if material is not None:
                         oi.write(material + "\n")
                     if solderMask is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("Solder mask color not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         solderMask = "Solder Mask: Red (Default)"
                     oi.write(solderMask + "\n")
                     if silkscreen is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("Silkscreen color not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         silkscreen = "Silkscreen: White (Default)"
                     oi.write(silkscreen + "\n")
                     if copperLayers is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("Number of layers not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         copperLayers = "Layers: 2 (Default)"
                     oi.write(copperLayers + "\n")
                     if finish is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("PCB finish not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         finish = "Finish: HASL Lead-free (Default)"
                     oi.write(finish + "\n")
                     if thickness is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("PCB thickness not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         thickness = "Thickness: 1.6mm (Default)"
                     oi.write(thickness + "\n")
                     if copperWeight is None:
-                        if wx.GetApp() is not None and orderingInstructionsSeen:
-                            resp = wx.MessageBox("Copper weight not found!",
-                                        'Warning', wx.OK | wx.ICON_WARNING)
+                        defaultsUsed = True
                         copperWeight = "Copper weight: 1oz (Default)"
                     oi.write(copperWeight + "\n")
                     if minTrackWidth < INVALID_WIDTH:
@@ -1292,6 +1263,9 @@ class Panelizer():
                             float(minViaDrill) / SCALE, float(minViaDrill) * 1000 / (SCALE * 25.4)))
                     if orderingExtras is not None:
                         oi.write(orderingExtras)
+                    if defaultsUsed:
+                        report += "Warning: Ordering Instructions contains default values.\n"
+                        sysExit = 1
             except Exception as e:
                 # Don't throw exception if we can't save ordering instructions
                 pass
@@ -1311,7 +1285,7 @@ class Panelizer():
                         refs += ref
                     else:
                         refs += "," + ref
-                if wx.GetApp() is not None and orderingInstructionsSeen:
+                if wx.GetApp() is not None:
                     resp = wx.MessageBox("Empty (undefined) PROD_IDs found!\n" + refs,
                                 'Warning', wx.OK | wx.ICON_WARNING)
                 report += "Empty (undefined) PROD_IDs found: " + refs + "\n"
