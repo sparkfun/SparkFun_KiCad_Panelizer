@@ -368,9 +368,10 @@ class Panelizer():
         cutWidth = 0
         drawings = board.GetDrawings()
         for drawing in drawings:
-            if drawing.IsOnLayer(edgeLayerNumber):
-                if drawing.GetWidth() > cutWidth:
-                    cutWidth = drawing.GetWidth()
+            if hasattr(drawing, "IsOnLayer") and hasattr(drawing, "GetWidth"):
+                if drawing.IsOnLayer(edgeLayerNumber):
+                    if drawing.GetWidth() > cutWidth:
+                        cutWidth = drawing.GetWidth()
         #report += "Subtracting Edge.Cuts line width of {}mm.\n".format(cutWidth / SCALE)
         boardWidth -= cutWidth
         boardHeight -= cutWidth
