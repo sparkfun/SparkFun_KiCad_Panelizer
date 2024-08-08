@@ -522,14 +522,15 @@ class Panelizer():
                                         ref = sourceModule.Reference().GetText()
                                     prodIDs.append([sourceModule.GetPropertyNative("PROD_ID"), ref])
             else: # Move source modules which are outside the bounding box
-                # If the drawing is below the bottom edge and likely to clip the rail, move it below the rail
-                if (pos.y > boardBottomEdge) and (pos.y < (boardBottomEdge + (2 * int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))):
-                    sourceModule.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
-                elif pos.y < boardTopEdge: # If the drawing is above the top edge, move it above the panel
+                # If the module is below the bottom edge and likely to clip the rail, move it below the rail
+                if pos.y > boardBottomEdge:
+                    if pos.y < (boardBottomEdge + (2 * int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE))):
+                        sourceModule.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
+                elif pos.y < boardTopEdge: # If the module is above the top edge, move it above the panel
                     sourceModule.Move(pcbnew.VECTOR2I(0, int((-(NUM_Y - 1) * boardHeight) - (HORIZONTAL_EDGE_RAIL_WIDTH * SCALE))))
-                elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
+                elif pos.x > boardRightEdge: # If the module is to the right, move it beyond the panel
                     sourceModule.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
-                else: # elif pos.x < boardLeftEdge: # If the drawing is to the left, move it outside the rail
+                else: # elif pos.x < boardLeftEdge: # If the module is to the left, move it outside the rail
                     sourceModule.Move(pcbnew.VECTOR2I(int(-VERTICAL_EDGE_RAIL_WIDTH * SCALE), 0))
 
         for module in newModules:
@@ -620,12 +621,12 @@ class Panelizer():
                 #if txt is not None: # Copy all text outside the bounding box to the report
                 #    report += txt + "\n"
                 if pos.y > boardBottomEdge: # If the drawing is below the bottom edge, move it below the rail
-                    if pos.y < (boardBottomEdge + (HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)): # But only if in the way
+                    if pos.y < (boardBottomEdge + (2 * int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE))): # But only if in the way
                         sourceDrawing.Move(pcbnew.VECTOR2I(0, int(HORIZONTAL_EDGE_RAIL_WIDTH * SCALE)))
-                elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
-                    sourceDrawing.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
                 elif pos.y < boardTopEdge: # If the drawing is above the top edge, move it above the panel
                     sourceDrawing.Move(pcbnew.VECTOR2I(0, int((-(NUM_Y - 1) * boardHeight) - (HORIZONTAL_EDGE_RAIL_WIDTH * SCALE))))
+                elif pos.x > boardRightEdge: # If the drawing is to the right, move it beyond the panel
+                    sourceDrawing.Move(pcbnew.VECTOR2I(int(((NUM_X - 1) * boardWidth) + (VERTICAL_EDGE_RAIL_WIDTH * SCALE)), 0))
                 else: # elif pos.x < boardLeftEdge: # If the drawing is to the left, move it outside the rail
                     sourceDrawing.Move(pcbnew.VECTOR2I(int(-VERTICAL_EDGE_RAIL_WIDTH * SCALE), 0))
 
