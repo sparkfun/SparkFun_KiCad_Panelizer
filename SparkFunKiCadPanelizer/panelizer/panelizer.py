@@ -215,7 +215,7 @@ class Panelizer():
             panelOutputFile = os.path.split(board.GetFileName())[1] # Get the file path tail
             panelOutputFile = os.path.join(panelOutputPath, os.path.splitext(panelOutputFile)[0] + "_panelized.kicad_pcb")
 
-            # Check if PCB needs to be saved
+            # Check if PCB needs to be saved first
             #if board.IsModified(): # This doesn't work. Need to find something that does...
             if wx.GetApp() is not None:
                 resp = wx.MessageBox("Do you want to save the PCB first?",
@@ -225,6 +225,18 @@ class Panelizer():
                     board.Save(board.GetFileName())
             else:
                 board.Save(board.GetFileName())
+
+            # Check if user wants to build zone fills
+            if wx.GetApp() is not None:
+                resp = wx.MessageBox("Do you want to build the zone fills?",
+                            'Fill zones?', wx.YES_NO | wx.ICON_INFORMATION)
+                if resp == wx.YES:
+                    report += "Zones filled by user.\n"
+                    fillerTool = pcbnew.ZONE_FILLER(board)
+                    fillerTool.Fill(board.Zones())
+            else:
+                fillerTool = pcbnew.ZONE_FILLER(board)
+                fillerTool.Fill(board.Zones())
 
         if board is None:
             report += "Could not load board. Quitting.\n"
