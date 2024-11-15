@@ -601,7 +601,9 @@ class Panelizer():
                 lines = txt.splitlines()
                 for line in lines:
                     if "mask" in line or "Mask" in line or "MASK" in line:
-                        solderMask = line
+                        solderMask = line # This will override the possibleLogos mask color
+                    if "silkscreen" in line or "Silkscreen" in line or "SILKSCREEN" in line:
+                        silkscreen = line # This will override the possibleLogos silk color
                     if "layers" in line or "Layers" in line or "LAYERS" in line:
                         if copperLayers is None: # Should we trust the instructions or the tracks?!
                             copperLayers = line
