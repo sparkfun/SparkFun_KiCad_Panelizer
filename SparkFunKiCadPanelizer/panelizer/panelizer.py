@@ -149,6 +149,13 @@ class Panelizer():
         # Any PCB_TEXT containing any of these keywords will be copied into the ordering instructions
         possibleExtras = ['clean', 'Clean', 'CLEAN', 'stackup', 'Stackup', 'STACKUP']
 
+        # Possible logos and their default mask and silkscreen colors: seen, mask, silk
+        possibleLogos = {
+            "SparkFun_Logo": [False, "Red", "White"],
+            "SparkX_Logo":   [False, "Black", "White"],
+            "SparkPNT_Logo": [False, "Red", "White"],
+            }
+
         sysExit = -1 # -1 indicates sysExit has not (yet) been set. The code below will set this to 0, 1, 2.
         report = "\nSTART: " + datetime.now().isoformat() + "\n"
 
@@ -457,8 +464,6 @@ class Panelizer():
         if PANEL_X or PANEL_Y:
             report += "You can fit " + str(NUM_X) + " x " + str(NUM_Y) + " boards on the panel.\n"
         
-        sparkfunLogoSeen = False
-        sparkxLogoSeen = False
         solderMask = None
         silkscreen = None
         copperLayers = "Layers: {}".format(board.GetCopperLayerCount()) # Should we trust the instructions or the tracks?!
@@ -508,10 +513,9 @@ class Panelizer():
         newModules = []
         prodIDs = []
         for sourceModule in modules:
-            if "SparkFun_Logo" in sourceModule.GetFPIDAsString():
-                sparkfunLogoSeen = True
-            if "SparkX_Logo" in sourceModule.GetFPIDAsString():
-                sparkxLogoSeen = True
+            for logo in possibleLogos.keys():
+                if logo in sourceModule.GetFPIDAsString():
+                    possibleLogos[logo][0] = True # Set 'seen' to True
             pos = sourceModule.GetPosition() # Check if footprint is outside the bounding box
             if pos.x >= boardLeftEdge and pos.x <= boardRightEdge and \
                 pos.y >= boardTopEdge and pos.y <= boardBottomEdge:
@@ -557,12 +561,11 @@ class Panelizer():
         for module in newModules:
             board.Add(module)
 
-        if sparkfunLogoSeen:
-            solderMask = "Solder Mask: Red"
-            silkscreen = "Silkscreen: White"
-        if sparkxLogoSeen:
-            solderMask = "Solder Mask: Black"
-            silkscreen = "Silkscreen: White"
+        for logo in possibleLogos.keys():
+            if possibleLogos[logo][0] == True: # if seen
+                solderMask = "Solder Mask: " + possibleLogos[logo][1]
+                silkscreen = "Silkscreen: " + possibleLogos[logo][2]
+                break
 
         # Array of zones
         modules = board.GetFootprints()
