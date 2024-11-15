@@ -134,11 +134,12 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                 leftright = dlg.CurrentSettings()["productionFiducialsCheck"]
                 if not exposeedge:
                     if fiducials:
-                        # Default the rail width to 3/8".
+                        # Default the rail width to 1/4" and nudge by 1/4 of the rail width.
                         # This provides the clearance needed for clamping and AOI Inspection of the fiducials.
                         # This is nasty. The default should be in panelizer.py. But I can't think of a solution
                         # which is good for everyone - including anyone running the panelizer from the command line.
-                        command.extend(['--hrail','9.525','--vrail','9.525'])
+                        command.extend(['--hrail','6.35','--vrail','6.35'])
+                        command.extend(['--fiducialpos','0.25'])
                         if leftright:
                             command.append('--fiducialslr')
                         else:
@@ -146,7 +147,8 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                 else:
                     if fiducials:
                         # Same comment as above
-                        command.extend(['--vrail','9.525'])
+                        command.extend(['--vrail','6.35'])
+                        command.extend(['--fiducialpos','0.25'])
                         command.append('--fiducialslr')
 
                 self.logger.log(logging.INFO, command)
