@@ -132,7 +132,8 @@ class Panelizer():
 
         # Panel fiducial parameters
         FIDUCIAL_MASK = 3.0 # mm - Fiducial_1.5mm_Mask3mm
-        FIDUCIAL_OFFSET = 2.5 # mm
+        FIDUCIAL_OFFSET_FROM_RAIL = 2.5 # mm
+        FIDUCIAL_CLAMP_CLEARANCE = 3.0 # mm
         FIDUCIAL_FOOTPRINT_BIG = "Fiducial_1.5mm_Mask3mm"
         FIDUCIAL_FOOTPRINT_SMALL = "Fiducial_1mm_Mask3mm"
 
@@ -273,14 +274,22 @@ class Panelizer():
             return sysExit, report
 
         # Check the fiducials
-        if (FIDUCIALS_LR and (VERTICAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1))):
-            report += "Cannot add L+R fiducials - edge rails not wide enough.\n"
-            FIDUCIALS_LR = False
-            sysExit = 1
-        if (FIDUCIALS_TB and (HORIZONTAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1))):
-            report += "Cannot add T+B fiducials - edge rails not wide enough.\n"
-            FIDUCIALS_TB = False
-            sysExit = 1
+        if FIDUCIALS_LR:
+            if (VERTICAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1)):
+                report += "Cannot add L+R fiducials - edge rails not wide enough.\n"
+                FIDUCIALS_LR = False
+                sysExit = 1
+            elif (((VERTICAL_EDGE_RAIL_WIDTH - FIDUCIAL_MASK) / 2) < FIDUCIAL_CLAMP_CLEARANCE):
+                report += "Vertical edge rails do not provide adequate clamp clearance.\n"
+                sysExit = 1
+        if FIDUCIALS_TB:
+            if (HORIZONTAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1)):
+                report += "Cannot add T+B fiducials - edge rails not wide enough.\n"
+                FIDUCIALS_TB = False
+                sysExit = 1
+            elif (((HORIZONTAL_EDGE_RAIL_WIDTH - FIDUCIAL_MASK) / 2) < FIDUCIAL_CLAMP_CLEARANCE):
+                report += "Horizontal edge rails do not provide adequate clamp clearance.\n"
+                sysExit = 1
 
         # Check smaller / larger
         if args.smaller and args.larger:
@@ -1002,32 +1011,32 @@ class Panelizer():
             if FIDUCIALS_LR:
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y + (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.y + (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
                 fiducials.append([
                     int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
             if FIDUCIALS_TB:
                 fiducials.append([
-                    int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
                     int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
                     FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
-                    int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
                     int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
                 fiducials.append([
-                    int(panelCenter.x + (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
+                    int(panelCenter.x + (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
                     int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
@@ -1056,7 +1065,7 @@ class Panelizer():
             hrail_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
             hrail_text.SetPosition(
                 pcbnew.VECTOR2I(
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2)),
                     int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
                 )
             )
@@ -1071,7 +1080,7 @@ class Panelizer():
             vrail_text.SetPosition(
                 pcbnew.VECTOR2I(
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2))
                 )
             )
             vrail_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))  # rotate if on vrail
@@ -1102,7 +1111,7 @@ class Panelizer():
             titleblock_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
             titleblock_text.SetPosition(
                 pcbnew.VECTOR2I(
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2)),
                     int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
                 )
             )
@@ -1117,7 +1126,7 @@ class Panelizer():
             titleblock_text.SetPosition(
                 pcbnew.VECTOR2I(
                     int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2))
                 )
             )
             titleblock_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))
@@ -1133,7 +1142,7 @@ class Panelizer():
             hrail_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
             hrail_text.SetPosition(
                 pcbnew.VECTOR2I(
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2)),
                     int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
                 )
             )
@@ -1147,7 +1156,7 @@ class Panelizer():
             titleblock_text.SetHorizJustify(pcbnew.GR_TEXT_H_ALIGN_LEFT)
             titleblock_text.SetPosition(
                 pcbnew.VECTOR2I(
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2)),
                     int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE))
                 )
             )
@@ -1162,7 +1171,7 @@ class Panelizer():
             vrail_text.SetPosition(
                 pcbnew.VECTOR2I(
                     int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2))
                 )
             )
             vrail_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))  # rotate if on vrail
@@ -1177,7 +1186,7 @@ class Panelizer():
             titleblock_text.SetPosition(
                 pcbnew.VECTOR2I(
                     int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET * 2))
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * SCALE - SCALE * FIDUCIAL_OFFSET_FROM_RAIL * 2))
                 )
             )
             titleblock_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))
