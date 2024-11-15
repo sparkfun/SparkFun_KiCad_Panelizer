@@ -73,6 +73,7 @@ class Panelizer():
         )
         parser.add_argument("--hrail", type=float, default="0.0", help="Horizontal edge rail width (mm)")
         parser.add_argument("--vrail", type=float, default="0.0", help="Vertical edge rail width (mm)")
+
         parser.add_argument("--hrailtext", help="Text to put on the horizontal edge rail")
         parser.add_argument("--vrailtext", help="Text to put on the vertical edge rail")
         parser.add_argument(
@@ -108,6 +109,11 @@ class Panelizer():
         parser.add_argument(
             "--fiducialstb", action="store_true", help="Add panel fiducials top and bottom"
         )
+        parser.add_argument(
+            "--fiducialpos", type=float, default="0.5",
+            help="Position the fiducials at this fraction of the rail width, default 0.5"
+        )
+
         parser.add_argument(
             "--exposeedge", action="store_true", help="Expose PCB bottom edge - e.g. for M.2 cards"
         )
@@ -190,6 +196,7 @@ class Panelizer():
         TITLE_Y = args.vtitle
         FIDUCIALS_LR = args.fiducialslr
         FIDUCIALS_TB = args.fiducialstb
+        FIDUCIAL_POS = args.fiducialpos
         EXPOSED_EDGE = args.exposeedge
 
         # Check if this is running in a plugin
@@ -280,21 +287,31 @@ class Panelizer():
             sysExit = 2
             return sysExit, report
 
+        # Check the fiducial position
+        if (FIDUCIAL_POS < 0.0) or (FIDUCIAL_POS > 1.0):
+            report += "Invalid fiducial position. Quitting.\n"
+            sysExit = 2
+            return sysExit, report
+
         # Check the fiducials
         if FIDUCIALS_LR:
-            if (VERTICAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1)):
-                report += "Cannot add L+R fiducials - edge rails not wide enough.\n"
+            fiducialExtent = (abs(0.5 - FIDUCIAL_POS) * VERTICAL_EDGE_RAIL_WIDTH) + (FIDUCIAL_MASK / 2)
+            clampClearance = VERTICAL_EDGE_RAIL_WIDTH - ((FIDUCIAL_POS * VERTICAL_EDGE_RAIL_WIDTH) + (FIDUCIAL_MASK / 2))
+            if fiducialExtent >= (VERTICAL_EDGE_RAIL_WIDTH / 2):
+                report += "Cannot add L+R fiducials at the selected position - edge rails not wide enough.\n"
                 FIDUCIALS_LR = False
                 sysExit = 1
-            elif (((VERTICAL_EDGE_RAIL_WIDTH - FIDUCIAL_MASK) / 2) < FIDUCIAL_CLAMP_CLEARANCE):
+            elif clampClearance < FIDUCIAL_CLAMP_CLEARANCE:
                 report += "Vertical edge rails do not provide adequate clamp clearance.\n"
                 sysExit = 1
         if FIDUCIALS_TB:
-            if (HORIZONTAL_EDGE_RAIL_WIDTH < (FIDUCIAL_MASK + 1)):
-                report += "Cannot add T+B fiducials - edge rails not wide enough.\n"
+            fiducialExtent = (abs(0.5 - FIDUCIAL_POS) * HORIZONTAL_EDGE_RAIL_WIDTH) + (FIDUCIAL_MASK / 2)
+            clampClearance = HORIZONTAL_EDGE_RAIL_WIDTH - ((FIDUCIAL_POS * HORIZONTAL_EDGE_RAIL_WIDTH) + (FIDUCIAL_MASK / 2))
+            if fiducialExtent >= (HORIZONTAL_EDGE_RAIL_WIDTH / 2):
+                report += "Cannot add T+B fiducials at the selected position - edge rails not wide enough.\n"
                 FIDUCIALS_TB = False
                 sysExit = 1
-            elif (((HORIZONTAL_EDGE_RAIL_WIDTH - FIDUCIAL_MASK) / 2) < FIDUCIAL_CLAMP_CLEARANCE):
+            elif clampClearance < FIDUCIAL_CLAMP_CLEARANCE:
                 report += "Horizontal edge rails do not provide adequate clamp clearance.\n"
                 sysExit = 1
 
@@ -1015,34 +1032,34 @@ class Panelizer():
             fiducials = []
             if FIDUCIALS_LR:
                 fiducials.append([
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     int(panelCenter.y + (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
-                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.x - (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
                 fiducials.append([
-                    int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.x + (panelWidth / 2 - VERTICAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     int(panelCenter.y - (panelHeight / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * HORIZONTAL_EDGE_RAIL_WIDTH))),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
             if FIDUCIALS_TB:
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.y + (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     FIDUCIAL_FOOTPRINT_BIG
                 ])
                 fiducials.append([
                     int(panelCenter.x - (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
                 fiducials.append([
                     int(panelCenter.x + (panelWidth / 2 - (SCALE * FIDUCIAL_OFFSET_FROM_RAIL + SCALE * VERTICAL_EDGE_RAIL_WIDTH))),
-                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH / 2 * SCALE)),
+                    int(panelCenter.y - (panelHeight / 2 - HORIZONTAL_EDGE_RAIL_WIDTH * (1.0 - FIDUCIAL_POS) * SCALE)),
                     FIDUCIAL_FOOTPRINT_SMALL
                 ])
             for pos in fiducials:
