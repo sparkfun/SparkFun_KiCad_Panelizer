@@ -241,18 +241,6 @@ class Panelizer():
             else:
                 board.Save(board.GetFileName())
 
-            # Check if user wants to build zone fills
-            if wx.GetApp() is not None:
-                resp = wx.MessageBox("Do you want to build the zone fills?",
-                            'Fill zones?', wx.YES_NO | wx.ICON_INFORMATION)
-                if resp == wx.YES:
-                    report += "Zones filled by user.\n"
-                    fillerTool = pcbnew.ZONE_FILLER(board)
-                    fillerTool.Fill(board.Zones())
-            else:
-                fillerTool = pcbnew.ZONE_FILLER(board)
-                fillerTool.Fill(board.Zones())
-
         if board is None:
             report += "Could not load board. Quitting.\n"
             sysExit = 2
@@ -389,6 +377,12 @@ class Panelizer():
             report += V_SCORE_TEXT_LAYER + " not found in layertable. Quitting.\n"
             sysExit = 2
             return sysExit, report    
+
+        # Fill the zones
+        # This prevents badness with pads on "F.Cu, B.Cu and connected layers" and "Connected layers only"
+        report += "Zones filled by Panelizer.\n"
+        fillerTool = pcbnew.ZONE_FILLER(board)
+        fillerTool.Fill(board.Zones())
 
         # Get dimensions of board
         # Note: the bounding box width and height _include_ the Edge.Cuts line width.
