@@ -1208,6 +1208,12 @@ class Panelizer():
             titleblock_text.SetTextAngle(pcbnew.EDA_ANGLE(-900, pcbnew.TENTHS_OF_A_DEGREE_T))
             board.Add(titleblock_text)
 
+        # Finally, refill the zones
+        # This prevents the badness reported in #21
+        report += "Zones filled by Panelizer.\n"
+        fillerTool = pcbnew.ZONE_FILLER(board)
+        fillerTool.Fill(board.Zones())
+
         # Save output
         board.SetFileName(panelOutputFile)
         board.Save(panelOutputFile)
