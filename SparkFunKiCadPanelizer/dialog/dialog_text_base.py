@@ -159,34 +159,55 @@ class GeneralPanelBase ( wx.Panel ):
 
         sbSizer3 = wx.StaticBoxSizer( wx.StaticBox( self, wx.ID_ANY, _(u"Gaps:") ), wx.VERTICAL )
 
-        fgSizerGaps = wx.FlexGridSizer( 0, 2, 4, 4 )
-        fgSizerGaps.SetFlexibleDirection( wx.BOTH )
-        fgSizerGaps.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+        fgSizerVerticalGaps = wx.FlexGridSizer( 0, 3, 0, 0 )
+        fgSizerVerticalGaps.SetFlexibleDirection( wx.BOTH )
+        fgSizerVerticalGaps.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
         self.m_gapsVerticalLabel = wx.StaticText( sbSizer3.GetStaticBox(), wx.ID_ANY, _(u"Vertical Gap (X):"), wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
         self.m_gapsVerticalLabel.Wrap( -1 )
 
-        fgSizerGaps.Add( self.m_gapsVerticalLabel, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+        self.m_gapsVerticalLabel.SetMinSize( wx.Size( 120,-1 ) )
+
+        fgSizerVerticalGaps.Add( self.m_gapsVerticalLabel, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
 
         self.m_gapsVerticalCtrl = wx.TextCtrl( sbSizer3.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_PROCESS_ENTER )
         self.m_gapsVerticalCtrl.SetMaxLength( 0 )
         self.m_gapsVerticalCtrl.SetMinSize( wx.Size( 64,-1 ) )
 
-        fgSizerGaps.Add( self.m_gapsVerticalCtrl, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+        fgSizerVerticalGaps.Add( self.m_gapsVerticalCtrl, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.m_buttonGapsVerticalHelp = wx.Button( sbSizer3.GetStaticBox(), wx.ID_ANY, _(u"MyButton"), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_buttonGapsVerticalHelp.SetMinSize( wx.Size( 15,15 ) )
+
+        fgSizerVerticalGaps.Add( self.m_buttonGapsVerticalHelp, 0, wx.ALL, 5 )
+
+
+        sbSizer3.Add( fgSizerVerticalGaps, 1, wx.EXPAND, 5 )
+
+        fgSizerHorizontalGaps = wx.FlexGridSizer( 0, 3, 0, 0 )
+        fgSizerHorizontalGaps.SetFlexibleDirection( wx.BOTH )
+        fgSizerHorizontalGaps.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
         self.m_gapsHorizontalLabel = wx.StaticText( sbSizer3.GetStaticBox(), wx.ID_ANY, _(u"Horizontal Gap (Y):"), wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
         self.m_gapsHorizontalLabel.Wrap( -1 )
 
-        fgSizerGaps.Add( self.m_gapsHorizontalLabel, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+        self.m_gapsHorizontalLabel.SetMinSize( wx.Size( 120,-1 ) )
+
+        fgSizerHorizontalGaps.Add( self.m_gapsHorizontalLabel, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
 
         self.m_gapsHorizontalCtrl = wx.TextCtrl( sbSizer3.GetStaticBox(), wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_PROCESS_ENTER )
         self.m_gapsHorizontalCtrl.SetMaxLength( 0 )
         self.m_gapsHorizontalCtrl.SetMinSize( wx.Size( 64,-1 ) )
 
-        fgSizerGaps.Add( self.m_gapsHorizontalCtrl, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+        fgSizerHorizontalGaps.Add( self.m_gapsHorizontalCtrl, 1, wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.m_buttonGapsHorizontalHelp = wx.Button( sbSizer3.GetStaticBox(), wx.ID_ANY, _(u"MyButton"), wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_buttonGapsHorizontalHelp.SetMinSize( wx.Size( 15,15 ) )
+
+        fgSizerHorizontalGaps.Add( self.m_buttonGapsHorizontalHelp, 0, wx.ALL, 5 )
 
 
-        sbSizer3.Add( fgSizerGaps, 0, wx.ALL, 10 )
+        sbSizer3.Add( fgSizerHorizontalGaps, 1, wx.EXPAND, 5 )
 
         self.m_removeRightVerticalCheck = wx.CheckBox( sbSizer3.GetStaticBox(), wx.ID_ANY, _(u"Remove right-most vertical gap and use v-score instead"), wx.DefaultPosition, wx.DefaultSize, 0 )
         sbSizer3.Add( self.m_removeRightVerticalCheck, 0, wx.ALL, 5 )
@@ -238,6 +259,8 @@ class GeneralPanelBase ( wx.Panel ):
         bMainSizer.Fit( self )
 
         # Connect Events
+        self.m_buttonGapsVerticalHelp.Bind( wx.EVT_BUTTON, self.ClickGapsVerticalHelp )
+        self.m_buttonGapsHorizontalHelp.Bind( wx.EVT_BUTTON, self.ClickGapsHorizontalHelp )
         self.m_buttonFiducialsHelp.Bind( wx.EVT_BUTTON, self.ClickFiducialsHelp )
         self.m_buttonEdgeHelp.Bind( wx.EVT_BUTTON, self.ClickEdgeHelp )
 
@@ -246,6 +269,12 @@ class GeneralPanelBase ( wx.Panel ):
 
 
     # Virtual event handlers, override them in your derived class
+    def ClickGapsVerticalHelp( self, event ):
+        pass
+
+    def ClickGapsHorizontalHelp( self, event ):
+        pass
+
     def ClickFiducialsHelp( self, event ):
         pass
 
