@@ -327,6 +327,9 @@ class Panelizer():
             report += "Can not have Y gaps without vertical rails. Quitting.\n"
             sysExit = 2
             return sysExit, report
+        if ((GAP_X > 0.0) and (GAP_X < 7.62)) or ((GAP_Y > 0.0) and (GAP_Y < 7.62)): # Check non-zero gaps are 0.3" for AOI
+            report += "Gaps should be at least 0.3\" for AOI.\n"
+            sysExit = 1
 
         # Check exposed edge
         if EXPOSED_EDGE:
