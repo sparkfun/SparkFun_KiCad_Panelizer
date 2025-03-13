@@ -217,6 +217,14 @@ class GeneralPanel(dialog_text_base.GeneralPanelBase):
     def __init__(self, parent):
         dialog_text_base.GeneralPanelBase.__init__(self, parent)
 
+        self.m_buttonGapsVerticalHelp.SetLabelText("")
+        # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
+        self.m_buttonGapsVerticalHelp.SetBitmap(get_btn_bitmap("info-15.png"))
+
+        self.m_buttonGapsHorizontalHelp.SetLabelText("")
+        # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
+        self.m_buttonGapsHorizontalHelp.SetBitmap(get_btn_bitmap("info-15.png"))
+
         self.m_buttonFiducialsHelp.SetLabelText("")
         # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
         self.m_buttonFiducialsHelp.SetBitmap(get_btn_bitmap("info-15.png"))
@@ -224,6 +232,28 @@ class GeneralPanel(dialog_text_base.GeneralPanelBase):
         self.m_buttonEdgeHelp.SetLabelText("")
         # Icon by Icons8 https://icons8.com : https://icons8.com/icon/63308/info
         self.m_buttonEdgeHelp.SetBitmap(get_btn_bitmap("info-15.png"))
+
+    def ClickGapsVerticalHelp( self, event ):
+        wx.MessageBox("\
+This sets the width of the vertical gaps\n\
+within the panel. Vertical gaps run from\n\
+the bottom rail to the top rail. The width\n\
+is defined in X.\n\
+\n\
+The gap width should be at least 0.3\" to\n\
+aid automated inspection.\
+", 'Info', wx.OK | wx.ICON_INFORMATION)
+
+    def ClickGapsHorizontalHelp( self, event ):
+        wx.MessageBox("\
+This sets the width of the horizontal gaps\n\
+within the panel. Horizontal gaps run from\n\
+the left rail to the right rail. The width\n\
+is defined in Y.\n\
+\n\
+The gap width should be at least 0.3\" to\n\
+aid automated inspection.\
+", 'Info', wx.OK | wx.ICON_INFORMATION)
 
     def ClickFiducialsHelp( self, event ):
         wx.MessageBox("\
