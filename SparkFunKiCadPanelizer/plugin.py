@@ -97,8 +97,8 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
             self.logger.log(logging.INFO, "Running Panelizer")
 
             if not self.IsSupported():
-                # Log an error if this version of KiCad has not been tested
-                self.logger.log(logging.ERROR, "Version check failed. \"{}\" may not be supported. Panelizing may fail".format(self.kicad_build_version))
+                # Log a warning if this version of KiCad has not been tested
+                self.logger.log(logging.WARNING, "Version check failed. \"{}\" may not be supported. Panelizing may fail".format(self.kicad_build_version))
 
             command = []
 
@@ -162,7 +162,7 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
                 sysExit, report = p_panelizer.startPanelizerCommand(command, board, self.ordering_instructions, self.logger)
                 logWarn = logging.INFO
                 if sysExit >= 1:
-                    logWarn = logging.WARN
+                    logWarn = logging.WARNING
                 if sysExit >= 2:
                     logWarn = logging.ERROR
                 self.logger.log(logWarn, report)
