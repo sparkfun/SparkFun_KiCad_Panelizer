@@ -315,6 +315,10 @@ class Panelizer():
             SMALLER_THAN = True
 
         # Check gaps
+        if (GAP_X < 0.0) or (GAP_Y < 0.0):
+            report += "Gap width can not be negative. Quitting.\n"
+            sysExit = 2
+            return sysExit, report
         if (GAP_X != 0.0) and (GAP_Y != 0.0):
             report += "Specify X or Y gaps, not both. Quitting.\n"
             sysExit = 2
