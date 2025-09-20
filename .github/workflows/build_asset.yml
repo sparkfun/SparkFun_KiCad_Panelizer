@@ -27,7 +27,7 @@ jobs:
           echo "PCM_NAME=$(ls SparkFunKiCadPanelizer*.zip | rev | cut -c 5- | rev)" >> $GITHUB_ENV
 
       - name: Upload pcm build to action - avoid double-zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with: 
           name: ${{ env.PCM_NAME }}
           path: ./pcm/build/${{ env.PCM_NAME }}

@@ -27,7 +27,7 @@ jobs:
           echo "PCM_NAME=$(ls SparkFunKiCadPanelizer*.zip | rev | cut -c 5- | rev)" >> $GITHUB_ENV
 
       - name: Publish release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             ./pcm/build/${{ env.ZIP_NAME }}
