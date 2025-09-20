@@ -363,11 +363,11 @@ class Panelizer():
         vScoreTextLayerNumber = None
         for i in range(numlayers):
             layertable[i] = {'standardName': board.GetStandardLayerName(i), 'actualName': board.GetLayerName(i)}
-            if "Edge.Cuts" in board.GetStandardLayerName(i):
+            if "Edge.Cuts" == board.GetStandardLayerName(i):
                 edgeLayerNumber = i
-            if V_SCORE_LAYER in board.GetStandardLayerName(i):
+            if V_SCORE_LAYER == board.GetStandardLayerName(i):
                 vScoreLayerNumber = i
-            if V_SCORE_TEXT_LAYER in board.GetStandardLayerName(i):
+            if V_SCORE_TEXT_LAYER == board.GetStandardLayerName(i):
                 vScoreTextLayerNumber = i
 
         if edgeLayerNumber is None:
