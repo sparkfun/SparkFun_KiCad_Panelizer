@@ -158,10 +158,10 @@ class DialogPanel(dialog_text_base.DialogPanel):
             if value is None:
                 continue
 
-            if self.vscore_layer in key:
+            if self.vscore_layer == key:
                 defaultLayerFound = False
                 for row in range(self.vscore.LayersGrid.GetNumberRows()):
-                    if value in self.vscore.LayersGrid.GetCellValue(row, 1):
+                    if (value == self.vscore.LayersGrid.GetCellValue(row, 1)) or ((value + " (") in self.vscore.LayersGrid.GetCellValue(row, 1)):
                         b = "1"
                         defaultLayerFound = True
                     else:
@@ -187,13 +187,14 @@ class DialogPanel(dialog_text_base.DialogPanel):
         params = {}
 
         for item in self.config_defaults.keys():
-            if self.vscore_layer in item:
+            if self.vscore_layer == item:
                 for row in range(self.vscore.LayersGrid.GetNumberRows()):
                     if self.vscore.LayersGrid.GetCellValue(row, 0) == "1":
                         layername = self.vscore.LayersGrid.GetCellValue(row, 1)
                         if " (" in layername:
                             layername = layername[:layername.find(" (")] # Trim the actual name - if present
                         params.update({self.vscore_layer: layername})
+                        break # Exit on the first "1" - just in case there are multiple (see #25)
             else:
                 obj = getattr(self.general, "m_{}".format(item))
                 if hasattr(obj, "GetValue"):
