@@ -27,15 +27,15 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         
         self._pcbnew_frame = None
 
-        self.supportedVersions = ['7.','8.','9.']
+        self.supportedVersions = [7,8,9,10]
 
-        self.kicad_build_version = pcbnew.GetBuildVersion()
+        self.kicad_build_version = int(pcbnew.GetBuildVersion().split(".")[0])
 
     productionDir = "Production"
 
     def IsSupported(self):
         for v in self.supportedVersions:
-            if self.kicad_build_version.startswith(v):
+            if self.kicad_build_version == v:
                 return True
         return False
     

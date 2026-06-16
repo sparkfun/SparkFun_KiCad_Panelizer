@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@master
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Update zip
         run: |
@@ -27,7 +27,7 @@ jobs:
           echo "PCM_NAME=$(ls SparkFunKiCadPanelizer*.zip | rev | cut -c 5- | rev)" >> $GITHUB_ENV
 
       - name: Publish release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             ./pcm/build/${{ env.ZIP_NAME }}
