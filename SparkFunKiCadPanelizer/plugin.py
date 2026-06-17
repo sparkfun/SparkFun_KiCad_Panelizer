@@ -66,6 +66,7 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
             pass
 
         self.logger = logging.getLogger()
+        previousLoggingLevel = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(logFile)
         f_handler.setLevel(logging.DEBUG) # Log everything
@@ -191,6 +192,7 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
 
         finally:
             self.logger.removeHandler(f_handler)
+            self.logger.setLevel(previousLoggingLevel)
             dlg.Destroy()
                         
 
