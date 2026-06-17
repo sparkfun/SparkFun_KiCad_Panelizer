@@ -65,7 +65,8 @@ class PanelizerPlugin(pcbnew.ActionPlugin, object):
         except FileNotFoundError:
             pass
 
-        self.logger = logging.getLogger('panelizer_logger')
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
         f_handler = logging.FileHandler(logFile)
         f_handler.setLevel(logging.DEBUG) # Log everything
         f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
