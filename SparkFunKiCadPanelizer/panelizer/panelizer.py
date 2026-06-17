@@ -1016,7 +1016,7 @@ class Panelizer():
         # Add fiducials
 
         # Find the KiCad Fiducial footprints
-        kicadVersion = pcbnew.GetBuildVersion().split('.')[0]
+        kicadVersion = int(pcbnew.GetBuildVersion().split('.')[0])
         fiducialEnv = "KICAD{}_FOOTPRINT_DIR".format(kicadVersion)
         fiducialPath = os.getenv(fiducialEnv ) # This works when running the plugin inside KiCad
         if fiducialPath is not None:
