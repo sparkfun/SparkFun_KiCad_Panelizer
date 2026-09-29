@@ -256,6 +256,9 @@ class Panelizer():
                     sysExit = 1
                     return sysExit, report
 
+        # Get the KiCad build version
+        kicadVersion = int(pcbnew.GetBuildVersion().split('.')[0])
+
         # Check that rails are at least RAIL_TEXT_SIZE plus 1mm
         if (((HORIZONTAL_EDGE_RAIL_TEXT or TITLE_X) and (HORIZONTAL_EDGE_RAIL_WIDTH < (RAIL_TEXT_SIZE + 2))) or
             ((VERTICAL_EDGE_RAIL_TEXT or TITLE_Y) and (VERTICAL_EDGE_RAIL_WIDTH < (RAIL_TEXT_SIZE + 2)))):
@@ -593,7 +596,16 @@ class Panelizer():
                 for y in range(0, NUM_Y):  # iterate through y direction
                     if (x != 0) or (y != 0):  # do not duplicate source object to location
                         sourceZone = board.GetArea(a)
-                        newZone = sourceZone.Duplicate()
+                        # 10.0.5 Fix: ZONE.Duplicate() missing 1 required positional argument: 'addToParentGroup'
+                        # Based on KiKit v1.8.1 - thank you @yaqwsx
+                        # Duplicate a zone without adding it to its parent group.
+                        # KiCad 10.0.5 requires the addToParentGroup argument, while KiCad 9 and
+                        # earlier KiCad 10 releases expose only the zero-argument signature.
+                        # Cast the duplicate to ZONE.
+                        try:
+                            newZone = pcbnew.Cast_to_ZONE(sourceZone.Duplicate(False))
+                        except TypeError:
+                            newZone = sourceZone.Duplicate()
                         newZone.SetNet(sourceZone.GetNet())
                         xpos = int(x * boardWidth)
                         ypos = int(-y * boardHeight)
@@ -1016,7 +1028,6 @@ class Panelizer():
         # Add fiducials
 
         # Find the KiCad Fiducial footprints
-        kicadVersion = int(pcbnew.GetBuildVersion().split('.')[0])
         fiducialEnv = "KICAD{}_FOOTPRINT_DIR".format(kicadVersion)
         fiducialPath = os.getenv(fiducialEnv ) # This works when running the plugin inside KiCad
         if fiducialPath is not None:
